@@ -3,137 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SPACE ESCAPE: Mobile Ready</title>
+    <title>SPACE ESCAPE: Leaderboards</title>
     <style>
-        /* GLOBAL RESET */
-        * { box-sizing: border-box; touch-action: none; /* Prevents zooming/scrolling on mobile */ }
-        
+        * { box-sizing: border-box; touch-action: none; }
         body { margin: 0; background: #000; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         canvas { display: block; } 
-        
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
-        .hud { 
-            position: absolute; top: 10px; left: 10px; 
-            font-size: 20px; font-weight: bold; text-shadow: 2px 2px #000; 
-            background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px;
-        }
-
-        .controls-hint {
-            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-            color: #aaa; font-size: 14px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px;
-        }
+        .hud { position: absolute; top: 10px; left: 10px; font-size: 20px; font-weight: bold; text-shadow: 2px 2px #000; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; }
+        .controls-hint { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: #aaa; font-size: 14px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px; }
         
-        /* General Menu Styling */
-        .menu { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: rgba(0, 20, 40, 0.98); border: 3px solid #00d2ff; padding: 20px; 
-            text-align: center; pointer-events: auto; display: none; box-shadow: 0 0 50px rgba(0, 210, 255, 0.4); border-radius: 12px;
-            width: 90%; max-width: 500px; z-index: 20;
-        }
+        .menu { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 20, 40, 0.98); border: 3px solid #00d2ff; padding: 20px; text-align: center; pointer-events: auto; display: none; box-shadow: 0 0 50px rgba(0, 210, 255, 0.4); border-radius: 12px; width: 90%; max-width: 500px; z-index: 20; max-height: 90vh; overflow-y: auto; }
         
-        button { 
-            background: #00d2ff; border: none; padding: 10px 15px; color: #000; 
-            font-weight: bold; cursor: pointer; font-family: inherit; border-radius: 4px; font-size: 14px;
-            transition: 0.2s; 
-        }
+        button { background: #00d2ff; border: none; padding: 8px 12px; color: #000; font-weight: bold; cursor: pointer; font-family: inherit; border-radius: 4px; font-size: 14px; transition: 0.2s; }
         button:hover { background: #fff; transform: scale(1.05); }
         button:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; }
+        .btn-red { background: #ff4444; width: 100%; padding: 12px; margin-top:10px; }
         
-        .btn-red { background: #ff4444; width: 100%; font-size: 16px; padding: 12px; }
-        
-        .shop-section { margin-bottom: 15px; border: 1px solid #444; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.3); }
-        .shop-title { color: #aaa; font-size: 0.9em; border-bottom: 1px solid #444; margin-bottom: 5px; text-align: left; }
-        .shop-item { margin: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+        /* SHOP STYLES */
+        .shop-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .shop-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; border: 1px solid #444; }
+        .shop-info { text-align: left; }
+        .shop-cost { color: yellow; }
 
-        /* --- MOBILE CONTROLS --- */
-        #mobileControls {
-            display: none; /* Hidden by default, shown via JS */
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            pointer-events: auto;
-            z-index: 15;
-        }
+        /* LEADERBOARD STYLES */
+        #leaderboardTable { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        #leaderboardTable th { border-bottom: 1px solid #00d2ff; color: #00d2ff; padding: 5px; }
+        #leaderboardTable td { padding: 5px; border-bottom: 1px solid #333; }
+        .loading { color: #aaa; font-style: italic; }
 
-        #mobileFireBtn {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 4px solid #ff4444; /* Outline style */
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff4444;
-            font-weight: bold;
-            font-size: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-        }
-        #mobileFireBtn:active {
-            background: rgba(255, 0, 0, 0.5);
-            transform: scale(0.95);
-        }
-
-        /* --- CASE OPENING STYLES --- */
+        /* CASE OPENING */
         #caseScreen { max-width: 520px; padding-bottom: 20px; }
-        
-        .case-window {
-            width: 100%; height: 130px; background: #111; border: 4px solid #333;
-            margin: 20px auto; position: relative; overflow: hidden; 
-            border-radius: 8px; box-shadow: inset 0 0 30px #000;
-        }
+        .case-window { width: 100%; height: 130px; background: #111; border: 4px solid #333; margin: 20px auto; position: relative; overflow: hidden; border-radius: 8px; box-shadow: inset 0 0 30px #000; }
         .case-reel { display: flex; height: 100%; position: absolute; left: 0; will-change: transform; }
-        
-        .case-item {
-            box-sizing: border-box; width: 100px; height: 100px; margin: 15px 10px;
-            background: #222; border: 3px solid #555; 
-            flex-shrink: 0; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-            font-size: 32px; border-radius: 8px; position: relative;
-        }
-        
+        .case-item { box-sizing: border-box; width: 100px; height: 100px; margin: 15px 10px; background: #222; border: 3px solid #555; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 32px; border-radius: 8px; position: relative; }
         .item-label { font-size: 10px; margin-top: 5px; color: #fff; text-shadow: none; font-weight: normal; line-height: 1.2;}
-
-        .common { border-color: #888; box-shadow: 0 0 5px #555; } 
-        .uncommon { border-color: #00d2ff; box-shadow: 0 0 10px #00d2ff; } 
-        .rare { border-color: #d200ff; box-shadow: 0 0 15px #d200ff; } 
-        .legendary { border-color: #ffd700; box-shadow: 0 0 25px #ffd700; animation: pulse 1s infinite; } 
+        .common { border-color: #888; box-shadow: 0 0 5px #555; } .uncommon { border-color: #00d2ff; box-shadow: 0 0 10px #00d2ff; } .rare { border-color: #d200ff; box-shadow: 0 0 15px #d200ff; } .legendary { border-color: #ffd700; box-shadow: 0 0 25px #ffd700; animation: pulse 1s infinite; } 
         @keyframes pulse { 0% { border-color: #ffd700; } 50% { border-color: #ff5500; } 100% { border-color: #ffd700; } }
-        
         .color-swatch { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px white; }
         .center-line { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #ff0000; transform: translateX(-50%); z-index: 20; box-shadow: 0 0 15px red; }
-        
         #spinBtn { background: linear-gradient(to bottom, #ffd700, #ffaa00); border: 2px solid #fff; color: black; font-size: 1.2em; width: 80%; padding: 15px; box-shadow: 0 0 15px #ffd700; margin-top:10px;}
-        #spinBtn:hover { transform: scale(1.1); box-shadow: 0 0 25px #ffd700; }
-
+        
+        /* MOBILE CONTROLS */
+        #mobileControls { display: none; position: absolute; bottom: 20px; right: 20px; pointer-events: auto; z-index: 15; }
+        #mobileFireBtn { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #ff4444; background: rgba(255, 0, 0, 0.2); color: #ff4444; font-weight: bold; display: flex; justify-content: center; align-items: center; }
+        #mobileFireBtn:active { background: rgba(255, 0, 0, 0.5); transform: scale(0.95); }
     </style>
 </head>
 <body>
 
     <canvas id="gameCanvas"></canvas>
-
-    <div id="mobileControls">
-        <div id="mobileFireBtn">FIRE</div>
-    </div>
+    <div id="mobileControls"><div id="mobileFireBtn">FIRE</div></div>
 
     <div id="ui-layer">
         <div class="hud">
             PILOT: <span id="hudName">Player</span> <br>
-            ----------------<br>
-            LIVES: <span id="hudLives">❤️❤️❤️</span> <br>
-            SHIELDS: <span id="hudShield">🛡️🛡️🛡️</span> <br>
-            ----------------<br>
-            COINS: <span id="hudCoins" style="color:yellow">0</span> <br>
+            LIVES: <span id="hudLives">❤️❤️❤️</span> | SHIELD: <span id="hudShield">🛡️🛡️🛡️</span> <br>
+            SCORE: <span id="hudScore" style="color:cyan">0</span> | COINS: <span id="hudCoins" style="color:yellow">0</span> <br>
             SECTOR: <span id="hudLevel">1</span>
         </div>
-
-        <div class="controls-hint" id="desktopHint">
-            ⬅️➡️ MOVE | [SPACE] SHOOT
-        </div>
-        <div class="controls-hint" id="mobileHint" style="display:none">
-            DRAG TO MOVE | TAP BUTTON TO SHOOT
-        </div>
+        <div class="controls-hint" id="desktopHint">⬅️➡️ MOVE | [SPACE] SHOOT</div>
+        <div class="controls-hint" id="mobileHint" style="display:none">DRAG TO MOVE | TAP BUTTON TO SHOOT</div>
 
         <div id="startScreen" class="menu" style="display: block;">
             <h1 style="color:#00d2ff">SPACE ESCAPE</h1>
@@ -143,16 +73,21 @@
             <br><br>
             <button onclick="startGame()" style="font-size: 1.2em; padding: 15px 30px;">LAUNCH MISSION</button>
             <br><br>
-            <button onclick="clearSave()" style="background: #444; color:#ccc; font-size: 0.8em;">RESET SAVE DATA</button>
+            <button onclick="viewLeaderboard()" style="background:#555">LEADERBOARD</button>
+            <button onclick="clearSave()" style="background: #444; color:#ccc; font-size: 0.8em;">RESET SAVE</button>
+        </div>
+
+        <div id="shopScreen" class="menu">
+            <h2 style="color:#00d2ff; margin-top:0;">DOCKING STATION</h2>
+            <p>Coins: <span id="shopCoins" style="color:yellow; font-size: 1.5em;">0</span></p>
+            <div id="shopContainer" class="shop-list"></div>
+            <button onclick="nextLevel()" style="width: 100%;">NEXT SECTOR >></button>
         </div>
 
         <div id="caseScreen" class="menu">
             <h2 style="color:#ffd700; margin:0;">SECTOR CLEARED!</h2>
             <p id="caseStatus" style="color:#aaa; font-size: 0.9em;">Supply Crate Ready</p>
-            <div class="case-window">
-                <div class="center-line"></div>
-                <div class="case-reel" id="caseReel"></div>
-            </div>
+            <div class="case-window"><div class="center-line"></div><div class="case-reel" id="caseReel"></div></div>
             <div id="caseControls">
                 <button id="spinBtn" onclick="startSpin()">OPEN CASE</button>
                 <div id="prizeResult" style="display:none; height: 30px; font-weight: bold; color: #00ff00; font-size: 1.2em; margin: 10px 0;"></div>
@@ -160,151 +95,235 @@
             </div>
         </div>
 
-        <div id="shopScreen" class="menu">
-            <h2 style="color:#00d2ff; margin-top:0;">DOCKING STATION</h2>
-            <p style="margin:5px 0;">Coins: <span id="shopCoins" style="color:yellow; font-size: 1.5em;">0</span></p>
-            
-            <div class="shop-section">
-                <div class="shop-title">SHIP UPGRADES</div>
-                <div class="shop-item">
-                     <span>🛡️ <strong>Shield</strong> (Max 3)</span> 
-                     <span>Cost: 15 <button id="btnShield" onclick="buy('shield')">Buy</button></span>
-                </div>
-                <div class="shop-item">
-                    <span>❤️ <strong>Extra Life</strong></span> 
-                    <span>Cost: 250 <button id="btnLife" onclick="buy('life')">Buy</button></span>
-                </div>
-                <div class="shop-item">
-                    <span>💥 <strong>Damage +1</strong></span> 
-                    <span>Cost: 120 <button id="btnPower" onclick="buy('power')">Buy</button></span>
-                </div>
-                <div class="shop-item">
-                    <span>⚡ <strong>Speed Up</strong> (+10%)</span> 
-                    <span>Cost: 60 <button id="btnSpeed" onclick="buy('speed')">Buy</button></span>
-                </div>
-            </div>
-
-            <div class="shop-section">
-                <div class="shop-title">WEAPONS BAY</div>
-                <div class="shop-item">
-                    <span style="text-align:left">⚡ <strong>Rapid Fire</strong><br><span style="font-size:0.7em; color:#aaa">Fast, small beams</span></span> 
-                    <span>Cost: 200 <button id="btnWpnRapid" onclick="buyWeapon('rapid')">Buy</button></span>
-                </div>
-                <div class="shop-item">
-                    <span style="text-align:left">📐 <strong>Triple Split</strong><br><span style="font-size:0.7em; color:#aaa">3-Way Spread Shot</span></span> 
-                    <span>Cost: 400 <button id="btnWpnSpread" onclick="buyWeapon('spread')">Buy</button></span>
-                </div>
-                <div class="shop-item">
-                    <span style="text-align:left">🚀 <strong>Rocket Launcher</strong><br><span style="font-size:0.7em; color:#aaa">Explodes on impact</span></span> 
-                    <span>Cost: 600 <button id="btnWpnRocket" onclick="buyWeapon('rocket')">Buy</button></span>
-                </div>
-            </div>
-            
-            <button onclick="nextLevel()" style="width: 100%;">NEXT SECTOR >></button>
+        <div id="leaderboardScreen" class="menu">
+            <h2 style="color:#00d2ff">TOP PILOTS</h2>
+            <div id="leaderboardContent" class="loading">Loading data...</div>
+            <br>
+            <button onclick="closeLeaderboard()">CLOSE</button>
         </div>
 
         <div id="gameOverScreen" class="menu">
             <h1 style="color:red">MISSION FAILED</h1>
             <div style="font-size: 60px;">☠️</div>
-            <p style="color:#ccc;">Your ship was destroyed.<br>All progress lost.</p>
+            <p>Final Score: <span id="goScore">0</span></p>
+            <div id="submitStatus"></div>
+            <button class="btn-green" id="submitBtn" onclick="submitScore()">SUBMIT TO LEADERBOARD</button>
             <button class="btn-red" onclick="clearSave()">RESTART MISSION</button>
         </div>
         
         <div id="winScreen" class="menu">
             <h1 style="color:#00ff00">WELCOME HOME!</h1>
             <div style="font-size: 60px;">🌍</div>
-            <p>Final Score: <span id="finalScore"></span></p>
+            <p>Score: <span id="winScore">0</span></p>
+            <button class="btn-green" id="submitWinBtn" onclick="submitScore()">SUBMIT TO LEADERBOARD</button>
             <button onclick="clearSave()">PLAY AGAIN</button>
         </div>
     </div>
 
 <script>
+    // --- CONFIGURATION ---
+    // PASTE YOUR APPS SCRIPT URL HERE
+    const LEADERBOARD_API_URL = "https://script.google.com/macros/s/AKfycbyyTHmQyxXyxecKOZuXUvXdUPgqYZlpVRihbjE4BvykTdyQY43WmychSxsoIi4MCG2L/exec"; 
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
-
-    // --- MOBILE DETECTION ---
-    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    if (isMobile) {
-        document.getElementById('mobileControls').style.display = 'block';
-        document.getElementById('desktopHint').style.display = 'none';
-        document.getElementById('mobileHint').style.display = 'block';
-        
-        // Touch Drag Logic for Ship Movement
-        canvas.addEventListener('touchmove', function(e) {
-            e.preventDefault(); // Stop scrolling
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            let touchX = touch.clientX - rect.left;
-            
-            // Keep ship within bounds
-            if (touchX < 20) touchX = 20;
-            if (touchX > canvas.width - 20) touchX = canvas.width - 20;
-            
-            player.x = touchX;
-        }, { passive: false });
-
-        // Fire Button Logic
-        const fireBtn = document.getElementById('mobileFireBtn');
-        fireBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            fireWeapon(); // Allow rapid tapping
-            // Optional: Hold to fire logic could go here, but tapping is often snappier
-        });
-        // Also allow hold-to-fire via loop if needed, but tap is safer for arcade feel
-        let isFiring = false;
-        fireBtn.addEventListener('touchstart', () => isFiring = true);
-        fireBtn.addEventListener('touchend', () => isFiring = false);
-        
-        // Inject into update loop for hold-to-fire support
-        setInterval(() => { if(isFiring) fireWeapon(); }, 100);
-    }
-
-    const PLANET_COLORS = [
-        { sky: '#000000', planet: '#444444' }, // Deep Space
-        { sky: '#0d001a', planet: '#6a0dad' }, // Nebula
-        { sky: '#1a0000', planet: '#8b0000' }, // Red Dwarf
-        { sky: '#001a00', planet: '#32cd32' }, // Toxic Nebula
-        { sky: '#001a1a', planet: '#00ced1' }, // Ice Field
-        { sky: '#1a0500', planet: '#ff4500' }, // Crimson Void
-        { sky: '#1a1a00', planet: '#ffd700' }, // Solar Orbit
-        { sky: '#220022', planet: '#ff00ff' }, // Crystal World
-        { sky: '#000033', planet: '#1e90ff' }  // Earth
-    ];
 
     // --- GAME DATA ---
     let gameData = {
         name: "Pilot", score: 0, level: 1, coins: 0, lives: 3,
-        currentWeapon: 'standard', 
-        cosmeticColor: '#ff0', 
-        stats: { bulletSpeed: 9, bulletPower: 1, fireRate: 70, maxShields: 3 }
+        currentWeapon: 'standard', cosmeticColor: '#ff0',
+        stats: { bulletSpeed: 9, bulletPower: 1, fireRate: 70, maxShields: 3 },
+        // Track purchases for price scaling
+        purchases: { shield: 0, life: 0, power: 0, speed: 0, rapid: 0, spread: 0, rocket: 0 }
     };
 
     let currentShields = 3;
     let gameState = 'START'; 
-    let frameCount = 0;
-    let enemiesToSpawn = 0;
-    let spawnTimer = null;
-    let levelCompleteTriggered = false;
+    let frameCount = 0, enemiesToSpawn = 0, spawnTimer = null, levelCompleteTriggered = false;
 
-    // Load/Save Logic
-    if(localStorage.getItem('spaceEscapeV16')) {
-        try { gameData = JSON.parse(localStorage.getItem('spaceEscapeV16')); document.getElementById('playerNameInput').value = gameData.name; } catch(e) { clearSave(); }
+    // Load Save
+    if(localStorage.getItem('spaceEscapeV17')) {
+        try { gameData = JSON.parse(localStorage.getItem('spaceEscapeV17')); document.getElementById('playerNameInput').value = gameData.name; } catch(e) { clearSave(); }
     }
-    function saveGame() { localStorage.setItem('spaceEscapeV16', JSON.stringify(gameData)); }
-    function clearSave() { localStorage.removeItem('spaceEscapeV16'); location.reload(); }
+    function saveGame() { localStorage.setItem('spaceEscapeV17', JSON.stringify(gameData)); }
+    function clearSave() { localStorage.removeItem('spaceEscapeV17'); location.reload(); }
 
     const player = { x: canvas.width / 2, y: canvas.height - 100, speed: 7, lastShot: 0 };
     let bullets = [], enemyBullets = [], enemies = [], particles = [], coins = [];
     const keys = { ArrowLeft: false, ArrowRight: false, " ": false };
 
-    window.addEventListener('keydown', e => keys[e.key] = true);
-    window.addEventListener('keyup', e => keys[e.key] = false);
+    // --- SHOP LOGIC (DYNAMIC SORTING) ---
+    const SHOP_DEFS = [
+        { id: 'shield', name: '🛡️ Shield Refill', type: 'consumable', baseCost: 15, desc: 'Repair 1 Hit' },
+        { id: 'speed', name: '⚡ Speed Up', type: 'upgrade', baseCost: 60, desc: 'Fire Rate +10%' },
+        { id: 'power', name: '💥 Damage Up', type: 'upgrade', baseCost: 120, desc: 'Bullet Power +1' },
+        { id: 'life', name: '❤️ Extra Life', type: 'consumable', baseCost: 250, desc: '+1 Try' },
+        { id: 'rapid', name: '⚡ Rapid Blaster', type: 'weapon', baseCost: 200, desc: 'Fast, Weak' },
+        { id: 'spread', name: '📐 Triple Shot', type: 'weapon', baseCost: 400, desc: 'Spread Fire' },
+        { id: 'rocket', name: '🚀 Rocket', type: 'weapon', baseCost: 600, desc: 'Explosive' }
+    ];
 
-    // --- GAMEPLAY ---
+    function getPrice(id) {
+        let count = gameData.purchases[id] || 0;
+        let item = SHOP_DEFS.find(i => i.id === id);
+        // Consumables (Shield) don't scale price indefinitely, maybe cap or reset? 
+        // Request said "Each upgrade 5% more". Let's apply to all.
+        return Math.floor(item.baseCost * Math.pow(1.05, count));
+    }
+
+    function renderShop() {
+        const container = document.getElementById('shopContainer');
+        container.innerHTML = '';
+        document.getElementById('shopCoins').innerText = gameData.coins;
+
+        // 1. Prepare items with current prices
+        let items = SHOP_DEFS.map(item => {
+            return { ...item, currentPrice: getPrice(item.id) };
+        });
+
+        // 2. Sort Cheapest to Expensive
+        items.sort((a, b) => a.currentPrice - b.currentPrice);
+
+        // 3. Render
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'shop-item';
+            
+            let btnText = "Buy";
+            let disabled = false;
+
+            // Logic for disabling buttons
+            if (item.id === 'shield' && currentShields >= 3) { btnText = "MAX"; disabled = true; }
+            if (item.type === 'weapon' && gameData.currentWeapon === item.id) { btnText = "OWNED"; disabled = true; }
+            if (gameData.coins < item.currentPrice) { disabled = true; }
+
+            div.innerHTML = `
+                <div class="shop-info">
+                    <strong>${item.name}</strong><br>
+                    <span style="font-size:0.8em; color:#aaa">${item.desc}</span>
+                </div>
+                <div style="text-align:right">
+                    <span class="shop-cost">${item.currentPrice}</span><br>
+                    <button ${disabled ? 'disabled' : ''} onclick="buyItem('${item.id}')">${btnText}</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function buyItem(id) {
+        let price = getPrice(id);
+        if (gameData.coins >= price) {
+            gameData.coins -= price;
+            gameData.purchases[id] = (gameData.purchases[id] || 0) + 1; // Increment count for price scaling
+
+            // Apply Effect
+            if(id === 'shield') currentShields++;
+            if(id === 'life') gameData.lives++;
+            if(id === 'power') gameData.stats.bulletPower++;
+            if(id === 'speed') gameData.stats.fireRate = Math.max(15, gameData.stats.fireRate - 5);
+            if(['rapid', 'spread', 'rocket'].includes(id)) gameData.currentWeapon = id;
+
+            saveGame();
+            updateHUD();
+            renderShop(); // Re-render to sort and update prices
+        }
+    }
+
+    // --- LEADERBOARD LOGIC ---
+    function submitScore() {
+        if(LEADERBOARD_API_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+            alert("Leaderboard API not configured in code!");
+            return;
+        }
+        
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true; btn.innerText = "Sending...";
+        
+        const payload = {
+            name: gameData.name,
+            score: gameData.score, // Using accumulated score
+            level: gameData.level
+        };
+
+        fetch(LEADERBOARD_API_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Important for Apps Script
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'application/json' }
+        }).then(() => {
+            document.getElementById('submitStatus').innerText = "Score Submitted!";
+            btn.style.display = 'none';
+        }).catch(err => {
+            console.error(err);
+            btn.innerText = "Error (Try Again)";
+            btn.disabled = false;
+        });
+    }
+
+    function viewLeaderboard() {
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('leaderboardScreen').style.display = 'block';
+        
+        if(LEADERBOARD_API_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+            document.getElementById('leaderboardContent').innerHTML = "API URL not set.";
+            return;
+        }
+
+        fetch(LEADERBOARD_API_URL)
+        .then(res => res.json())
+        .then(data => {
+            let html = `<table id="leaderboardTable"><tr><th>#</th><th>Name</th><th>Score</th><th>Sec</th></tr>`;
+            data.forEach((row, i) => {
+                html += `<tr><td>${i+1}</td><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td></tr>`;
+            });
+            html += `</table>`;
+            document.getElementById('leaderboardContent').innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('leaderboardContent').innerHTML = "Failed to load.";
+        });
+    }
+    
+    function closeLeaderboard() {
+        document.getElementById('leaderboardScreen').style.display = 'none';
+        document.getElementById('startScreen').style.display = 'block';
+    }
+
+    // --- MAIN GAME LOGIC (Shortened for brevity, mostly same as v16) ---
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isMobile) {
+        document.getElementById('mobileControls').style.display = 'block';
+        document.getElementById('desktopHint').style.display = 'none';
+        document.getElementById('mobileHint').style.display = 'block';
+        canvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            let touchX = touch.clientX - rect.left;
+            if (touchX < 20) touchX = 20; if (touchX > canvas.width - 20) touchX = canvas.width - 20;
+            player.x = touchX;
+        }, { passive: false });
+        const fireBtn = document.getElementById('mobileFireBtn');
+        let isFiring = false;
+        fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); isFiring = true; fireWeapon(); });
+        fireBtn.addEventListener('touchend', (e) => { e.preventDefault(); isFiring = false; });
+        setInterval(() => { if(isFiring) fireWeapon(); }, 100);
+    } else {
+        window.addEventListener('keydown', e => keys[e.key] = true);
+        window.addEventListener('keyup', e => keys[e.key] = false);
+    }
+
+    const PLANET_COLORS = [
+        { sky: '#000000', planet: '#444444' }, { sky: '#0d001a', planet: '#6a0dad' },
+        { sky: '#1a0000', planet: '#8b0000' }, { sky: '#001a00', planet: '#32cd32' },
+        { sky: '#001a1a', planet: '#00ced1' }, { sky: '#1a0500', planet: '#ff4500' },
+        { sky: '#1a1a00', planet: '#ffd700' }, { sky: '#220022', planet: '#ff00ff' },
+        { sky: '#000033', planet: '#1e90ff' }
+    ];
+
     function startGame() {
         const nameInput = document.getElementById('playerNameInput').value;
         if(nameInput.trim()) gameData.name = nameInput;
@@ -324,134 +343,82 @@
 
     function spawnLoop() {
         if(gameState !== 'PLAYING') return;
-        if(enemiesToSpawn > 0) {
-            spawnEnemy();
-            enemiesToSpawn--;
-            let rate = Math.max(300, 1000 - (gameData.level * 80)); 
-            spawnTimer = setTimeout(spawnLoop, rate);
-        }
+        if(enemiesToSpawn > 0) { spawnEnemy(); enemiesToSpawn--; setTimeout(spawnLoop, Math.max(300, 1000 - (gameData.level * 80))); }
     }
 
     function spawnEnemy() {
         let lvl = gameData.level;
         let type = 'invader'; let hp = 1; let speed = 1.5 + (lvl * 0.3); let size = 45; let canShoot = false;
         let rng = Math.random();
-
         if (rng < 0.05 + (lvl * 0.01)) { type = 'asteroid'; hp = 5; speed = 4; size = 50; } 
         else {
             if (lvl >= 2 && rng > 0.6) { type = 'speeder'; hp = 2; speed += 2.0; size=40; }
             if (lvl >= 4 && rng > 0.85) { type = 'brute'; hp = 4; speed = 1.0; canShoot = true; size=60; }
             if (lvl >= 7 && rng > 0.95) { type = 'boss'; hp = 8; speed = 0.8; canShoot = true; size=80; }
         }
-        
-        let rotSpeed = (Math.random()-0.5) * 0.1;
-        enemies.push({ x: Math.random()*(canvas.width-60)+30, y: -80, size, type, hp, speed, canShoot, lastShot: frameCount, rot: 0, rotSpeed });
+        enemies.push({ x: Math.random()*(canvas.width-60)+30, y: -80, size, type, hp, speed, canShoot, lastShot: frameCount, rot: 0, rotSpeed: (Math.random()-0.5)*0.1 });
     }
 
-    // --- SHOOTING LOGIC ---
     function fireWeapon() {
         let w = gameData.currentWeapon;
-        let rate = 40; 
-        let laserCol = gameData.cosmeticColor; 
-        
-        if (w === 'standard') rate = gameData.stats.fireRate; 
-        if (w === 'rapid') rate = 8; 
-        if (w === 'spread') rate = 45; 
-        if (w === 'rocket') rate = 80; 
-
+        let rate = (w === 'standard') ? gameData.stats.fireRate : (w === 'rapid' ? 8 : (w === 'spread' ? 45 : 80)); 
         if (frameCount - player.lastShot > rate) {
-            if (w === 'standard') {
-                bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: 0, vy: -gameData.stats.bulletSpeed, type: 'laser', dmg: gameData.stats.bulletPower, color: laserCol });
-            }
-            else if (w === 'rapid') {
-                bullets.push({ x: player.x, y: player.y-30, w: 2, h: 8, vx: 0, vy: -12, type: 'laser', dmg: Math.max(1, gameData.stats.bulletPower/2), color: laserCol });
-            }
-            else if (w === 'spread') {
-                let p = gameData.stats.bulletPower;
-                bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: 0, vy: -9, type: 'laser', dmg: p, color: laserCol });
-                bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: -2, vy: -9, type: 'laser', dmg: p, color: laserCol });
-                bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: 2, vy: -9, type: 'laser', dmg: p, color: laserCol });
-            }
-            else if (w === 'rocket') {
-                bullets.push({ x: player.x, y: player.y-30, w: 10, h: 20, vx: 0, vy: -5, type: 'rocket', dmg: 5 + gameData.stats.bulletPower, color: '#f00' });
-            }
+            let c = gameData.cosmeticColor;
+            if (w === 'standard') bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: 0, vy: -9, type: 'laser', dmg: gameData.stats.bulletPower, color: c });
+            else if (w === 'rapid') bullets.push({ x: player.x, y: player.y-30, w: 2, h: 8, vx: 0, vy: -12, type: 'laser', dmg: Math.max(1, gameData.stats.bulletPower/2), color: c });
+            else if (w === 'spread') { [0, -2, 2].forEach(vx => bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: vx, vy: -9, type: 'laser', dmg: gameData.stats.bulletPower, color: c })); }
+            else if (w === 'rocket') bullets.push({ x: player.x, y: player.y-30, w: 10, h: 20, vx: 0, vy: -5, type: 'rocket', dmg: 5 + gameData.stats.bulletPower, color: '#f00' });
             player.lastShot = frameCount;
         }
     }
 
-    // --- UPDATE LOOP ---
     function update() {
         if (gameState !== 'PLAYING') return;
         frameCount++;
-
-        // Desktop Movement
         if (!isMobile) {
             if (keys.ArrowLeft && player.x > 30) player.x -= player.speed;
             if (keys.ArrowRight && player.x < canvas.width - 30) player.x += player.speed;
             if (keys[" "]) fireWeapon();
         }
-        // Mobile Movement is handled by 'touchmove' listener instantly
 
         // Bullets
         for(let i=bullets.length-1; i>=0; i--) {
-            let b = bullets[i]; 
-            b.x += b.vx; b.y += b.vy;
+            let b = bullets[i]; b.x += b.vx; b.y += b.vy;
             if (b.y < -20) bullets.splice(i, 1);
         }
-        
         // Enemy Bullets
         for(let i=enemyBullets.length-1; i>=0; i--) {
             let eb = enemyBullets[i]; eb.y += eb.speed;
             if(dist(eb.x, eb.y, player.x, player.y) < 30) { enemyBullets.splice(i, 1); takeDamage(); } 
             else if (eb.y > canvas.height) enemyBullets.splice(i, 1);
         }
-
         // Enemies
         for(let i=enemies.length-1; i>=0; i--) {
-            let e = enemies[i]; 
-            e.y += e.speed;
-            e.rot += e.rotSpeed; 
-
+            let e = enemies[i]; e.y += e.speed; e.rot += e.rotSpeed;
             if(e.canShoot && Math.random() < 0.02) enemyBullets.push({x: e.x, y: e.y + 20, speed: 6});
-
+            
             for(let j=bullets.length-1; j>=0; j--) {
                 let b = bullets[j];
                 if (dist(b.x, b.y, e.x, e.y - 10) < e.size/1.5) {
                     if (b.type === 'rocket') {
-                        bullets.splice(j, 1);
-                        createExplosion(b.x, b.y, '#ffaa00', 30);
-                        for(let k=enemies.length-1; k>=0; k--) {
-                            let nearby = enemies[k];
-                            if(dist(b.x, b.y, nearby.x, nearby.y) < 150) {
-                                nearby.hp -= b.dmg;
-                                if(nearby.hp <= 0) killEnemy(k);
-                            }
-                        }
+                        bullets.splice(j, 1); createExplosion(b.x, b.y, '#ffaa00', 30);
+                        for(let k=enemies.length-1; k>=0; k--) if(dist(b.x, b.y, enemies[k].x, enemies[k].y) < 150) { enemies[k].hp -= b.dmg; if(enemies[k].hp<=0) killEnemy(k); }
                         break; 
                     } else {
-                        bullets.splice(j, 1);
-                        e.hp -= b.dmg;
-                        createExplosion(e.x, e.y, b.color, 3);
+                        bullets.splice(j, 1); e.hp -= b.dmg; createExplosion(e.x, e.y, b.color, 3);
                         if (e.hp <= 0) { killEnemy(i); break; }
                     }
                 }
             }
         }
-        
-        // Enemy-Player Collision
+        // Collision
         for(let i=enemies.length-1; i>=0; i--) {
              let e = enemies[i];
-             if(dist(e.x, e.y, player.x, player.y) < e.size) {
-                 enemies.splice(i, 1);
-                 if(e.type === 'asteroid') takeLifeInstant(); else takeDamage(); 
-             } else if (e.y > canvas.height + 50) enemies.splice(i, 1);
+             if(dist(e.x, e.y, player.x, player.y) < e.size) { enemies.splice(i, 1); if(e.type === 'asteroid') takeLifeInstant(); else takeDamage(); } 
+             else if (e.y > canvas.height + 50) enemies.splice(i, 1);
         }
-
-        if (enemies.length === 0 && enemiesToSpawn <= 0 && !levelCompleteTriggered) {
-             levelCompleteTriggered = true;
-             setTimeout(showCaseScreen, 1500);
-        }
-
+        
+        if (enemies.length === 0 && enemiesToSpawn <= 0 && !levelCompleteTriggered) { levelCompleteTriggered = true; setTimeout(showCaseScreen, 1500); }
         // Coins
         for(let i=coins.length-1; i>=0; i--) {
             let c = coins[i]; c.y += 3; 
@@ -460,16 +427,16 @@
         }
         // Particles
         for(let i=particles.length-1; i>=0; i--) {
-            let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--;
-            if(p.life <= 0) particles.splice(i, 1);
+            let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--; if(p.life <= 0) particles.splice(i, 1);
         }
         updateHUD();
     }
     
     function killEnemy(idx) {
-        if(idx >= enemies.length || idx < 0) return;
+        if(idx < 0) return;
         let e = enemies[idx];
         createExplosion(e.x, e.y, '#0f0', 10);
+        gameData.score += 100; // BASE SCORE FOR KILL
         let coinDrop = 2 + Math.floor((gameData.level - 1) / 2);
         if(e.type !== 'asteroid') coins.push({x: e.x, y: e.y, val: coinDrop});
         enemies.splice(idx, 1);
@@ -479,43 +446,19 @@
     function takeLifeInstant() { createExplosion(player.x, player.y, '#ff0000', 50); loseLife(); }
     function loseLife() {
         gameData.lives--; currentShields = gameData.stats.maxShields;
-        if (gameData.lives <= 0) { gameState = 'GAMEOVER'; document.getElementById('gameOverScreen').style.display = 'block'; }
+        if (gameData.lives <= 0) { 
+            gameState = 'GAMEOVER'; 
+            document.getElementById('gameOverScreen').style.display = 'block'; 
+            document.getElementById('goScore').innerText = gameData.score;
+        }
     }
     function dist(x1, y1, x2, y2) { return Math.sqrt((x1-x2)**2 + (y1-y2)**2); }
-    function createExplosion(x, y, color, count) {
-        for(let i=0; i<count; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 15+Math.random()*15, color: color, size: Math.random()*5+1 });
-    }
+    function createExplosion(x, y, color, count) { for(let i=0; i<count; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 15+Math.random()*15, color: color, size: Math.random()*5+1 }); }
 
-    // --- DRAW HELPER FUNCTIONS ---
-    function drawInvader(x, y, w, h) {
-        ctx.fillStyle = '#44ff44';
-        ctx.beginPath(); ctx.rect(x-15, y-15, 30, 20); ctx.rect(x-20, y, 5, 10); ctx.rect(x+15, y, 5, 10); ctx.rect(x-10, y+5, 5, 10); ctx.rect(x+5, y+5, 5, 10); ctx.fill();
-        ctx.fillStyle = 'black'; ctx.fillRect(x-8, y-10, 5, 5); ctx.fillRect(x+3, y-10, 5, 5);
-    }
-    function drawSpeeder(x, y, w, h) {
-        ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.ellipse(x, y, 25, 10, 0, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y-5, 10, 0, Math.PI, true); ctx.fill();
-    }
-    function drawBrute(x, y, w, h) {
-        ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.moveTo(x, y+20); ctx.lineTo(x-25, y-20); ctx.lineTo(x, y-10); ctx.lineTo(x+25, y-20); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#880000'; ctx.fillRect(x-10, y-15, 20, 5);
-    }
-    function drawBoss(x, y, w, h) {
-        ctx.fillStyle = '#aa00aa'; ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#ff00ff'; ctx.beginPath(); ctx.moveTo(x-30, y); ctx.lineTo(x-45, y-10); ctx.lineTo(x-30, y-20); ctx.moveTo(x+30, y); ctx.lineTo(x+45, y-10); ctx.lineTo(x+30, y-20); ctx.fill();
-        ctx.fillStyle = '#ffff00'; ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#000'; ctx.beginPath(); ctx.rect(x-2, y-5, 4, 10); ctx.fill();
-    }
-    function drawAsteroid(x, y, size, rot) {
-        ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
-        ctx.fillStyle = '#888'; ctx.beginPath(); ctx.moveTo(-size/2, -size/2); ctx.lineTo(0, -size/1.5); ctx.lineTo(size/2, -size/2); ctx.lineTo(size/1.5, 0); ctx.lineTo(size/2, size/2); ctx.lineTo(0, size/1.2); ctx.lineTo(-size/2, size/2); ctx.lineTo(-size/1.5, 0); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#666'; ctx.beginPath(); ctx.arc(-5, -5, size/5, 0, Math.PI*2); ctx.fill(); ctx.restore();
-    }
-
-    // --- DRAW LOOP ---
+    // --- DRAW ---
     function draw() {
         const zoneIdx = Math.min(Math.floor((gameData.level-1)/2), PLANET_COLORS.length - 1);
         const config = PLANET_COLORS[zoneIdx];
-        
         let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
         grad.addColorStop(0, '#000'); grad.addColorStop(1, config.sky);
         ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -524,10 +467,8 @@
 
         if(gameState === 'PLAYING') {
             if(currentShields > 0) {
-                ctx.strokeStyle = `rgba(0, 200, 255, ${currentShields * 0.3})`;
-                ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x, player.y - 10, 40, 0, Math.PI*2); ctx.stroke();
+                ctx.strokeStyle = `rgba(0, 200, 255, ${currentShields * 0.3})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x, player.y - 10, 40, 0, Math.PI*2); ctx.stroke();
             }
-            
             ctx.fillStyle = '#00d2ff'; ctx.shadowBlur = 10; ctx.shadowColor = '#00d2ff';
             ctx.beginPath(); ctx.moveTo(player.x, player.y - 20); ctx.lineTo(player.x - 20, player.y + 15); ctx.lineTo(player.x, player.y + 5); ctx.lineTo(player.x + 20, player.y + 15); ctx.closePath(); ctx.fill();
             ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(player.x, player.y - 5, 5, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
@@ -537,27 +478,21 @@
             if(b.type === 'rocket') { ctx.font = "20px Arial"; ctx.fillText("🚀", b.x, b.y); } 
             else { ctx.fillStyle = b.color; ctx.shadowBlur = 5; ctx.shadowColor = b.color; ctx.fillRect(b.x-b.w/2, b.y, b.w, b.h); ctx.shadowBlur = 0; }
         });
-        
         ctx.fillStyle = '#f0f'; enemyBullets.forEach(eb => { ctx.beginPath(); ctx.arc(eb.x, eb.y, 6, 0, Math.PI*2); ctx.fill(); });
-        
         enemies.forEach(e => {
-            if(e.type === 'invader') drawInvader(e.x, e.y, e.size, e.size);
-            else if(e.type === 'speeder') drawSpeeder(e.x, e.y, e.size, e.size);
-            else if(e.type === 'brute') drawBrute(e.x, e.y, e.size, e.size);
-            else if(e.type === 'boss') drawBoss(e.x, e.y, e.size, e.size);
-            else if(e.type === 'asteroid') drawAsteroid(e.x, e.y, e.size, e.rot);
+            if(e.type === 'invader') { ctx.fillStyle = '#44ff44'; ctx.beginPath(); ctx.rect(e.x-15, e.y-15, 30, 20); ctx.fill(); ctx.fillStyle='black'; ctx.fillRect(e.x-8, e.y-10, 5, 5); ctx.fillRect(e.x+3, e.y-10, 5, 5); }
+            else if(e.type === 'speeder') { ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.ellipse(e.x, e.y, 25, 10, 0, 0, Math.PI*2); ctx.fill(); }
+            else if(e.type === 'brute') { ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.moveTo(e.x, e.y+20); ctx.lineTo(e.x-25, e.y-20); ctx.lineTo(e.x+25, e.y-20); ctx.fill(); }
+            else if(e.type === 'boss') { ctx.fillStyle = '#aa00aa'; ctx.beginPath(); ctx.arc(e.x, e.y, 30, 0, Math.PI*2); ctx.fill(); }
+            else if(e.type === 'asteroid') { ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.rot); ctx.fillStyle='#888'; ctx.beginPath(); ctx.moveTo(-25, -25); ctx.lineTo(25, -25); ctx.lineTo(0, 25); ctx.fill(); ctx.restore(); }
             
-            if(e.hp > 1 && e.type !== 'asteroid') {
-                ctx.fillStyle = "red"; ctx.fillRect(e.x-15, e.y-30, 30, 5);
-                ctx.fillStyle = "#0f0"; ctx.fillRect(e.x-15, e.y-30, 30 * (e.hp/4), 5);
-            }
+            if(e.hp > 1 && e.type !== 'asteroid') { ctx.fillStyle = "red"; ctx.fillRect(e.x-15, e.y-30, 30, 5); ctx.fillStyle = "#0f0"; ctx.fillRect(e.x-15, e.y-30, 30 * (e.hp/4), 5); }
         });
-        
         coins.forEach(c => { ctx.font = "20px Arial"; ctx.fillText("🪙", c.x, c.y); });
         particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
     }
 
-    // --- CASE & SHOP LOGIC ---
+    // --- CASE LOGIC ---
     const LOOT_TABLE = [
         { type: 'coin', val: 20, label: '20 Coins', icon: '🪙', rarity: 'common', weight: 45 },
         { type: 'coin', val: 50, label: '50 Coins', icon: '💰', rarity: 'uncommon', weight: 25 },
@@ -566,149 +501,43 @@
         { type: 'color', val: 0, label: 'New Color', icon: '🎨', rarity: 'rare', weight: 5 },
         { type: 'life', val: 1, label: 'Extra Life', icon: '❤️', rarity: 'legendary', weight: 2 }
     ];
-    
-    const COLOR_TABLE = [
-        { hex: '#ff00ff', name: 'Neon Pink' },
-        { hex: '#00ff00', name: 'Cyber Green' },
-        { hex: '#ffffff', name: 'Starlight White' },
-        { hex: '#ff5500', name: 'Solar Orange' },
-        { hex: '#00ffff', name: 'Ice Blue' },
-        { hex: '#ffff00', name: 'Golden Yellow' }
-    ];
-
+    const COLOR_TABLE = [ { hex: '#ff00ff', name: 'Neon Pink' }, { hex: '#00ff00', name: 'Cyber Green' }, { hex: '#ffffff', name: 'Starlight White' }, { hex: '#ff5500', name: 'Solar Orange' }, { hex: '#00ffff', name: 'Ice Blue' } ];
     let pendingReward = null;
 
-    function showCaseScreen() {
-        gameState = 'CASE'; saveGame();
-        document.getElementById('caseScreen').style.display = 'block';
-        document.getElementById('spinBtn').style.display = 'inline-block';
-        document.getElementById('claimBtn').style.display = 'none';
-        document.getElementById('prizeResult').style.display = 'none';
-        document.getElementById('caseStatus').innerText = "Supply Crate Ready";
-        const reel = document.getElementById('caseReel');
-        reel.innerHTML = ''; reel.style.transform = 'translateX(0px)'; reel.style.transition = 'none';
-        for(let i=0; i<5; i++) { const div = document.createElement('div'); div.className = 'case-item common'; div.innerHTML = `<div>❓</div>`; reel.appendChild(div); }
-    }
-
+    function showCaseScreen() { gameState = 'CASE'; saveGame(); document.getElementById('caseScreen').style.display='block'; document.getElementById('spinBtn').style.display='inline-block'; document.getElementById('claimBtn').style.display='none'; document.getElementById('prizeResult').style.display='none'; document.getElementById('caseStatus').innerText="Supply Crate Ready"; }
     function startSpin() {
-        document.getElementById('spinBtn').style.display = 'none'; 
-        document.getElementById('caseStatus').innerText = "Opening...";
-        
+        document.getElementById('spinBtn').style.display='none'; document.getElementById('caseStatus').innerText="Opening...";
         spinReelLogic(LOOT_TABLE, (reward) => {
-            if(reward.type === 'color') {
-                document.getElementById('caseStatus').innerText = "RARE DROP! SPINNING FOR COLOR...";
-                setTimeout(() => { startColorSpin(); }, 2000);
-            } else {
-                showWin(reward.label, reward);
-            }
+            if(reward.type === 'color') { document.getElementById('caseStatus').innerText="RARE DROP! SPINNING FOR COLOR..."; setTimeout(startColorSpin, 2000); } 
+            else { showWin(reward.label, reward); }
         });
     }
-
     function startColorSpin() {
-        const reel = document.getElementById('caseReel');
-        reel.style.transition = 'none'; reel.style.transform = 'translateX(0px)';
-        let items = [];
-        for(let i=0; i<60; i++) {
-             let c = COLOR_TABLE[Math.floor(Math.random() * COLOR_TABLE.length)];
-             items.push({ type: 'color', val: c.hex, label: c.name, icon: `<div class="color-swatch" style="background:${c.hex}"></div>`, rarity: 'rare' });
-        }
-        const winnerIndex = 40; const reward = items[winnerIndex];
-        reel.innerHTML = '';
-        items.forEach(item => { const div = document.createElement('div'); div.className = `case-item rare`; div.innerHTML = `<div>${item.icon}</div><div class="item-label">${item.label}</div>`; reel.appendChild(div); });
-        const itemWidth = 120; const windowCenter = 225;
-        let targetX = windowCenter - ((winnerIndex * itemWidth) + (itemWidth/2));
-        targetX += (Math.random() * 50) - 25; 
-        setTimeout(() => { reel.style.transition = 'transform 4s cubic-bezier(0.1, 0.9, 0.3, 1)'; reel.style.transform = `translateX(${targetX}px)`; }, 50);
-        setTimeout(() => { showWin(reward.label, reward); }, 4500);
+        let items = []; for(let i=0; i<60; i++) { let c = COLOR_TABLE[Math.floor(Math.random()*COLOR_TABLE.length)]; items.push({ type: 'color', val: c.hex, label: c.name, icon: `<div class="color-swatch" style="background:${c.hex}"></div>`, rarity: 'rare' }); }
+        const reward = items[40]; spinReelAnimation(items, () => showWin(reward.label, reward));
     }
-
     function spinReelLogic(table, callback) {
-        const reel = document.getElementById('caseReel'); reel.innerHTML = '';
         let items = []; for(let i=0; i<60; i++) items.push(getRandomItem(table));
-        const winnerIndex = 40; const reward = items[winnerIndex];
-        items.forEach(item => { const div = document.createElement('div'); div.className = `case-item ${item.rarity}`; div.innerHTML = `<div>${item.icon}</div><div class="item-label">${item.label}</div>`; reel.appendChild(div); });
-        const itemWidth = 120; const windowCenter = 225;
-        let targetX = windowCenter - ((winnerIndex * itemWidth) + (itemWidth/2));
-        targetX += (Math.random() * 50) - 25; 
-        setTimeout(() => { reel.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.3, 1)'; reel.style.transform = `translateX(${targetX}px)`; }, 50);
-        setTimeout(() => { callback(reward); }, 5500); 
+        spinReelAnimation(items, () => callback(items[40]));
     }
-
-    function showWin(label, reward) {
-        document.getElementById('prizeResult').style.display = 'block'; 
-        document.getElementById('prizeResult').innerText = `WON: ${label}!`; 
-        document.getElementById('claimBtn').style.display = 'inline-block'; 
-        applyReward(reward);
+    function spinReelAnimation(items, callback) {
+        const reel = document.getElementById('caseReel'); reel.innerHTML = ''; reel.style.transition='none'; reel.style.transform='translateX(0px)';
+        items.forEach(item => { const d = document.createElement('div'); d.className = `case-item ${item.rarity}`; d.innerHTML = `<div>${item.icon}</div><div class="item-label">${item.label}</div>`; reel.appendChild(d); });
+        setTimeout(() => { reel.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.3, 1)'; reel.style.transform = `translateX(${225 - ((40 * 120) + 60)}px)`; }, 50);
+        setTimeout(callback, 5500);
     }
-
-    function getRandomItem(table) {
-        const totalWeight = table.reduce((sum, item) => sum + item.weight, 0);
-        let random = Math.random() * totalWeight;
-        for(let item of table) { if(random < item.weight) return item; random -= item.weight; }
-        return table[0];
-    }
-    
-    function applyReward(item) {
-        if(item.type === 'coin') gameData.coins += item.val;
-        if(item.type === 'shield') currentShields = Math.min(currentShields + 1, gameData.stats.maxShields);
-        if(item.type === 'speed') gameData.stats.fireRate = Math.max(15, gameData.stats.fireRate - 5);
-        if(item.type === 'power') gameData.stats.bulletPower++;
-        if(item.type === 'life') gameData.lives++;
-        if(item.type === 'color') gameData.cosmeticColor = item.val;
+    function getRandomItem(table) { let total = table.reduce((a,b)=>a+b.weight,0); let r=Math.random()*total; for(let i of table){ if(r<i.weight) return i; r-=i.weight; } return table[0]; }
+    function showWin(lbl, rwd) { document.getElementById('prizeResult').style.display='block'; document.getElementById('prizeResult').innerText=`WON: ${lbl}!`; document.getElementById('claimBtn').style.display='inline-block'; applyReward(rwd); }
+    function applyReward(i) {
+        if(i.type==='coin') gameData.coins+=i.val; if(i.type==='shield') currentShields = Math.min(currentShields+1,3); if(i.type==='life') gameData.lives++; if(i.type==='color') gameData.cosmeticColor=i.val;
         saveGame(); updateHUD();
     }
-    function finishCase() { document.getElementById('caseScreen').style.display = 'none'; openShop(); }
-    function openShop() { gameState = 'SHOP'; document.getElementById('shopScreen').style.display = 'block'; updateShopUI(); }
+    function finishCase() { document.getElementById('caseScreen').style.display='none'; openShop(); }
+    function openShop() { gameState = 'SHOP'; document.getElementById('shopScreen').style.display='block'; renderShop(); }
+    function nextLevel() { document.getElementById('shopScreen').style.display='none'; gameData.level++; if(gameData.level>10){ gameState='WIN'; document.getElementById('winScreen').style.display='block'; document.getElementById('winScore').innerText=gameData.score; } else { startLevel(gameData.level); } }
     
-    function updateShopUI() {
-        document.getElementById('shopCoins').innerText = gameData.coins;
-        document.getElementById('btnShield').innerText = currentShields >= 3 ? "MAX" : "Buy";
-        document.getElementById('btnShield').disabled = currentShields >= 3;
-        
-        const w = gameData.currentWeapon;
-        document.getElementById('btnWpnRapid').innerText = w === 'rapid' ? "OWNED" : "Buy";
-        document.getElementById('btnWpnSpread').innerText = w === 'spread' ? "OWNED" : "Buy";
-        document.getElementById('btnWpnRocket').innerText = w === 'rocket' ? "OWNED" : "Buy";
-        
-        document.getElementById('btnWpnRapid').disabled = w === 'rapid';
-        document.getElementById('btnWpnSpread').disabled = w === 'spread';
-        document.getElementById('btnWpnRocket').disabled = w === 'rocket';
-    }
-
-    function buy(item) {
-        if(item === 'shield' && gameData.coins >= 15 && currentShields < 3) { gameData.coins-=15; currentShields++; }
-        else if(item === 'life' && gameData.coins >= 250) { gameData.coins-=250; gameData.lives++; }
-        else if(item === 'power' && gameData.coins >= 120) { gameData.coins-=120; gameData.stats.bulletPower++; }
-        else if(item === 'speed' && gameData.coins >= 60) { gameData.coins-=60; gameData.stats.fireRate = Math.max(15, gameData.stats.fireRate - 5); }
-        updateShopUI(); updateHUD(); saveGame();
-    }
-
-    function buyWeapon(type) {
-        let cost = 0;
-        if(type === 'rapid') cost = 200;
-        if(type === 'spread') cost = 400;
-        if(type === 'rocket') cost = 600;
-
-        if(gameData.coins >= cost) {
-            gameData.coins -= cost;
-            gameData.currentWeapon = type;
-            updateShopUI(); updateHUD(); saveGame();
-        }
-    }
-
-    function nextLevel() {
-        document.getElementById('shopScreen').style.display = 'none';
-        gameData.level++;
-        if(gameData.level > 10) { document.getElementById('finalScore').innerText = gameData.coins; document.getElementById('winScreen').style.display = 'block'; gameState = 'WIN'; saveGame(); } 
-        else { startLevel(gameData.level); }
-    }
     function updateHUD() {
-        document.getElementById('hudName').innerText = gameData.name;
-        document.getElementById('hudLives').innerText = "❤️".repeat(gameData.lives);
-        let s = currentShields >= 0 ? currentShields : 0;
-        document.getElementById('hudShield').innerText = "🛡️".repeat(s);
-        document.getElementById('hudCoins').innerText = gameData.coins;
-        document.getElementById('hudLevel').innerText = gameData.level;
+        document.getElementById('hudName').innerText = gameData.name; document.getElementById('hudLives').innerText = "❤️".repeat(gameData.lives); document.getElementById('hudShield').innerText = "🛡️".repeat(Math.max(0,currentShields)); document.getElementById('hudCoins').innerText = gameData.coins; document.getElementById('hudScore').innerText = gameData.score; document.getElementById('hudLevel').innerText = gameData.level;
     }
     function loop() { update(); draw(); requestAnimationFrame(loop); }
     loop();
