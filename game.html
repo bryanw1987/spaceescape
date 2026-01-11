@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Galactic Return: Case Opener</title>
+    <title>SPACE ESCAPE: Final Fixed</title>
     <style>
+        /* GLOBAL RESET for accurate math */
+        * { box-sizing: border-box; }
+        
         body { margin: 0; background: #000; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         canvas { display: block; } 
         
@@ -25,7 +28,7 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: rgba(0, 20, 40, 0.98); border: 3px solid #00d2ff; padding: 25px; 
             text-align: center; pointer-events: auto; display: none; box-shadow: 0 0 50px rgba(0, 210, 255, 0.4); border-radius: 12px;
-            min-width: 380px; z-index: 10;
+            min-width: 420px; z-index: 10;
         }
         
         button { 
@@ -41,22 +44,18 @@
         .shop-item { margin: 12px 0; border-bottom: 1px solid #444; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
 
         /* --- CASE OPENING STYLES --- */
-        #caseScreen {
-            width: 500px;
-            height: 300px;
-            overflow: hidden;
-        }
+        #caseScreen { width: 520px; padding-bottom: 20px; }
         
         .case-window {
-            width: 450px;
-            height: 120px;
+            width: 450px; /* Window Width */
+            height: 130px;
             background: #111;
             border: 4px solid #333;
             margin: 20px auto;
             position: relative;
-            overflow: hidden; /* Hides the items that are outside */
+            overflow: hidden; 
             border-radius: 8px;
-            box-shadow: inset 0 0 20px #000;
+            box-shadow: inset 0 0 30px #000;
         }
 
         .case-reel {
@@ -64,30 +63,32 @@
             height: 100%;
             position: absolute;
             left: 0;
-            /* Transition is handled in JS for precise timing */
+            will-change: transform; /* Smoother animation */
         }
 
         .case-item {
-            width: 100px;
+            /* MATH FIX: border-box ensures padding/border is INCLUDED in the 100px */
+            box-sizing: border-box; 
+            width: 100px; 
             height: 100px;
-            margin: 10px;
+            margin: 15px 10px; /* 10px Left + 10px Right = 20px margin space */
             background: #222;
-            border: 2px solid #555;
-            flex-shrink: 0; /* Don't shrink */
+            border: 3px solid #555;
+            flex-shrink: 0; 
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             font-size: 40px;
-            border-radius: 5px;
+            border-radius: 8px;
             position: relative;
         }
 
-        /* Rarity Colors for Borders */
-        .common { border-color: #aaa; box-shadow: 0 0 5px #aaa; } /* Coins */
-        .uncommon { border-color: #00d2ff; box-shadow: 0 0 10px #00d2ff; } /* Shield */
-        .rare { border-color: #d200ff; box-shadow: 0 0 15px #d200ff; } /* Upgrades */
-        .legendary { border-color: #ffd700; box-shadow: 0 0 25px #ffd700; animation: pulse 1s infinite; } /* Life */
+        /* Rarity Colors */
+        .common { border-color: #aaa; box-shadow: 0 0 5px #aaa; } 
+        .uncommon { border-color: #00d2ff; box-shadow: 0 0 10px #00d2ff; } 
+        .rare { border-color: #d200ff; box-shadow: 0 0 15px #d200ff; } 
+        .legendary { border-color: #ffd700; box-shadow: 0 0 25px #ffd700; animation: pulse 1s infinite; } 
 
         @keyframes pulse { 0% { border-color: #ffd700; } 50% { border-color: #ff5500; } 100% { border-color: #ffd700; } }
 
@@ -97,11 +98,23 @@
             width: 4px; height: 100%;
             background: #ff0000;
             transform: translateX(-50%);
-            z-index: 5;
-            box-shadow: 0 0 10px red;
+            z-index: 20;
+            box-shadow: 0 0 15px red;
         }
         
-        .item-label { font-size: 12px; margin-top: 5px; color: #fff; text-shadow: none; font-weight: normal;}
+        .item-label { font-size: 11px; margin-top: 5px; color: #fff; text-shadow: none; font-weight: normal;}
+
+        /* Spin Button */
+        #spinBtn {
+            background: linear-gradient(to bottom, #ffd700, #ffaa00);
+            border: 2px solid #fff;
+            color: black;
+            font-size: 1.2em;
+            width: 80%;
+            padding: 15px;
+            box-shadow: 0 0 15px #ffd700;
+        }
+        #spinBtn:hover { transform: scale(1.1); box-shadow: 0 0 25px #ffd700; }
 
     </style>
 </head>
@@ -125,7 +138,7 @@
         </div>
 
         <div id="startScreen" class="menu" style="display: block;">
-            <h1 style="color:#00d2ff">GALACTIC RETURN</h1>
+            <h1 style="color:#00d2ff">SPACE ESCAPE</h1>
             <div style="font-size: 50px; margin-bottom: 10px;">👨‍🚀 🚀 🪨 👽</div>
             <p>10 Sectors. Asteroids kill instantly. Loot cases await.</p>
             <input type="text" id="playerNameInput" placeholder="Enter Name" maxlength="12" style="padding:10px; text-align:center;">
@@ -137,7 +150,7 @@
 
         <div id="caseScreen" class="menu">
             <h2 style="color:#ffd700; margin:0;">SECTOR CLEARED!</h2>
-            <p>Scanning wreckage for salvage...</p>
+            <p id="caseStatus" style="color:#aaa; font-size: 0.9em;">Supply Crate Ready</p>
             
             <div class="case-window">
                 <div class="center-line"></div>
@@ -145,9 +158,11 @@
                     </div>
             </div>
             
-            <div id="prizeResult" style="height: 30px; font-weight: bold; color: #00ff00; font-size: 1.2em;"></div>
-            
-            <button id="claimBtn" onclick="finishCase()" style="display:none; width: 100%;">CLAIM REWARD</button>
+            <div id="caseControls" style="margin-top: 20px;">
+                <button id="spinBtn" onclick="startSpin()">OPEN CASE</button>
+                <div id="prizeResult" style="display:none; height: 30px; font-weight: bold; color: #00ff00; font-size: 1.2em; margin-bottom: 10px;"></div>
+                <button id="claimBtn" onclick="finishCase()" style="display:none; width: 100%;">CLAIM REWARD</button>
+            </div>
         </div>
 
         <div id="shopScreen" class="menu">
@@ -234,19 +249,19 @@
     let levelCompleteTriggered = false;
 
     // Load Save
-    if(localStorage.getItem('galacticCaseSave')) {
+    if(localStorage.getItem('spaceEscapeSaveV9')) {
         try {
-            gameData = JSON.parse(localStorage.getItem('galacticCaseSave'));
+            gameData = JSON.parse(localStorage.getItem('spaceEscapeSaveV9'));
             document.getElementById('playerNameInput').value = gameData.name;
         } catch(e) { clearSave(); }
     }
 
     function saveGame() {
-        localStorage.setItem('galacticCaseSave', JSON.stringify(gameData));
+        localStorage.setItem('spaceEscapeSaveV9', JSON.stringify(gameData));
     }
 
     function clearSave() {
-        localStorage.removeItem('galacticCaseSave');
+        localStorage.removeItem('spaceEscapeSaveV9');
         location.reload();
     }
 
@@ -310,7 +325,7 @@
         enemies.push({ x: Math.random()*(canvas.width-60)+30, y: -80, size, char, type, hp, speed, canShoot, lastShot: frameCount });
     }
 
-    // --- CASE OPENING LOGIC ---
+    // --- CASE OPENING LOGIC (PIXEL PERFECT FIX) ---
     const LOOT_TABLE = [
         { type: 'coin', val: 50, label: '50 Coins', icon: '🪙', rarity: 'common', weight: 40 },
         { type: 'coin', val: 100, label: '100 Coins', icon: '💰', rarity: 'common', weight: 20 },
@@ -322,27 +337,47 @@
 
     let pendingReward = null;
 
-    function triggerCaseOpening() {
+    // 1. Show Screen with "Open Case" button
+    function showCaseScreen() {
         gameState = 'CASE';
         saveGame();
+        
+        // Reset UI
         document.getElementById('caseScreen').style.display = 'block';
+        document.getElementById('spinBtn').style.display = 'inline-block';
         document.getElementById('claimBtn').style.display = 'none';
-        document.getElementById('prizeResult').innerText = "Spinning...";
-
-        // 1. Generate Reel
+        document.getElementById('prizeResult').style.display = 'none';
+        document.getElementById('caseStatus').innerText = "Supply Crate Ready";
+        
+        // Render Static Reel (All ? or random)
         const reel = document.getElementById('caseReel');
         reel.innerHTML = '';
-        reel.style.transition = 'none';
         reel.style.transform = 'translateX(0px)';
-
-        let items = [];
-        // Add 50 dummy items, then the winner, then 5 more
-        for(let i=0; i<60; i++) {
-            items.push(getRandomLoot());
-        }
+        reel.style.transition = 'none';
         
-        // Pick a Winner (Rigged to be at index 45)
-        const winnerIndex = 45;
+        // Show some dummy items at start
+        for(let i=0; i<5; i++) {
+             const div = document.createElement('div');
+             div.className = 'case-item common';
+             div.innerHTML = `<div>❓</div>`;
+             reel.appendChild(div);
+        }
+    }
+
+    // 2. Start Spin Logic when button clicked
+    function startSpin() {
+        document.getElementById('spinBtn').style.display = 'none'; // Hide button
+        document.getElementById('caseStatus').innerText = "Opening...";
+
+        const reel = document.getElementById('caseReel');
+        reel.innerHTML = '';
+        
+        let items = [];
+        // Generate 60 items
+        for(let i=0; i<60; i++) items.push(getRandomLoot());
+        
+        // Pick Winner at fixed index 40
+        const winnerIndex = 40;
         pendingReward = items[winnerIndex];
 
         // Render DOM
@@ -353,28 +388,40 @@
             reel.appendChild(div);
         });
 
-        // 2. Start Animation (CSS Translate)
-        // Item width (100) + Margin (20) = 120px per item
-        // Center of window is at 225px.
-        // We want item 45 to be centered.
-        // Formula: -(ItemIndex * 120) + (WindowCenter - ItemHalfWidth)
-        // -(45 * 120) + (225 - 60) = -5400 + 165 = -5235
+        // 3. PIXEL PERFECT MATH
+        // Item Width = 100px (including border due to box-sizing: border-box)
+        // Margin = 10px Left + 10px Right = 20px.
+        // TOTAL ITEM SPACE = 120px.
+        // Window Width = 450px. Center = 225px.
         
-        // Random jitter to make it look like it barely landed or almost passed
-        const jitter = Math.floor(Math.random() * 80) - 40; 
-        const targetPos = -((winnerIndex * 120) - 165 + jitter);
+        const itemWidth = 120; 
+        const windowCenter = 225;
+        
+        // Distance to center of winning item
+        // Index 40. Start position = 40 * 120 = 4800px.
+        // Center of item = 4800 + (120/2) = 4860px.
+        
+        // Target Translate = WindowCenter - WinnerCenter
+        let targetX = windowCenter - 4860; // Should be around -4635
+        
+        // Add minimal jitter (+/- 25px) to keep it inside the 100px box
+        const jitter = (Math.random() * 50) - 25; 
+        targetX += jitter;
 
+        // Force browser render
         setTimeout(() => {
-            reel.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.3, 1)'; // The "Slow Down" effect
-            reel.style.transform = `translateX(${targetPos}px)`;
-        }, 100);
+            reel.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.3, 1)'; 
+            reel.style.transform = `translateX(${targetX}px)`;
+        }, 50);
 
-        // 3. End Event
+        // 4. Show Result
         setTimeout(() => {
-            document.getElementById('prizeResult').innerText = `WON: ${pendingReward.label}!`;
+            const res = document.getElementById('prizeResult');
+            res.style.display = 'block';
+            res.innerText = `WON: ${pendingReward.label}!`;
             document.getElementById('claimBtn').style.display = 'inline-block';
             applyReward(pendingReward);
-        }, 5500); // Wait for animation
+        }, 5500); 
     }
 
     function getRandomLoot() {
@@ -504,8 +551,8 @@
 
         if (enemies.length === 0 && enemiesToSpawn <= 0 && !levelCompleteTriggered) {
              levelCompleteTriggered = true;
-             // TRIGGER CASE OPENING INSTEAD OF SHOP
-             setTimeout(triggerCaseOpening, 1500);
+             // Trigger Case Screen (Static state)
+             setTimeout(showCaseScreen, 1500);
         }
 
         for(let i=coins.length-1; i>=0; i--) {
