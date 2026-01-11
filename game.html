@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SPACE ESCAPE: Graphics Update</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SPACE ESCAPE: Mobile Ready</title>
     <style>
         /* GLOBAL RESET */
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; touch-action: none; /* Prevents zooming/scrolling on mobile */ }
         
         body { margin: 0; background: #000; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         canvas { display: block; } 
@@ -28,11 +29,11 @@
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: rgba(0, 20, 40, 0.98); border: 3px solid #00d2ff; padding: 20px; 
             text-align: center; pointer-events: auto; display: none; box-shadow: 0 0 50px rgba(0, 210, 255, 0.4); border-radius: 12px;
-            min-width: 500px; z-index: 10;
+            width: 90%; max-width: 500px; z-index: 20;
         }
         
         button { 
-            background: #00d2ff; border: none; padding: 8px 15px; color: #000; 
+            background: #00d2ff; border: none; padding: 10px 15px; color: #000; 
             font-weight: bold; cursor: pointer; font-family: inherit; border-radius: 4px; font-size: 14px;
             transition: 0.2s; 
         }
@@ -45,11 +46,40 @@
         .shop-title { color: #aaa; font-size: 0.9em; border-bottom: 1px solid #444; margin-bottom: 5px; text-align: left; }
         .shop-item { margin: 8px 0; display: flex; justify-content: space-between; align-items: center; }
 
+        /* --- MOBILE CONTROLS --- */
+        #mobileControls {
+            display: none; /* Hidden by default, shown via JS */
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            pointer-events: auto;
+            z-index: 15;
+        }
+
+        #mobileFireBtn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid #ff4444; /* Outline style */
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff4444;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+        }
+        #mobileFireBtn:active {
+            background: rgba(255, 0, 0, 0.5);
+            transform: scale(0.95);
+        }
+
         /* --- CASE OPENING STYLES --- */
-        #caseScreen { width: 520px; padding-bottom: 20px; }
+        #caseScreen { max-width: 520px; padding-bottom: 20px; }
         
         .case-window {
-            width: 450px; height: 130px; background: #111; border: 4px solid #333;
+            width: 100%; height: 130px; background: #111; border: 4px solid #333;
             margin: 20px auto; position: relative; overflow: hidden; 
             border-radius: 8px; box-shadow: inset 0 0 30px #000;
         }
@@ -73,6 +103,7 @@
         
         .color-swatch { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 10px white; }
         .center-line { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #ff0000; transform: translateX(-50%); z-index: 20; box-shadow: 0 0 15px red; }
+        
         #spinBtn { background: linear-gradient(to bottom, #ffd700, #ffaa00); border: 2px solid #fff; color: black; font-size: 1.2em; width: 80%; padding: 15px; box-shadow: 0 0 15px #ffd700; margin-top:10px;}
         #spinBtn:hover { transform: scale(1.1); box-shadow: 0 0 25px #ffd700; }
 
@@ -81,6 +112,10 @@
 <body>
 
     <canvas id="gameCanvas"></canvas>
+
+    <div id="mobileControls">
+        <div id="mobileFireBtn">FIRE</div>
+    </div>
 
     <div id="ui-layer">
         <div class="hud">
@@ -93,8 +128,11 @@
             SECTOR: <span id="hudLevel">1</span>
         </div>
 
-        <div class="controls-hint">
+        <div class="controls-hint" id="desktopHint">
             ⬅️➡️ MOVE | [SPACE] SHOOT
+        </div>
+        <div class="controls-hint" id="mobileHint" style="display:none">
+            DRAG TO MOVE | TAP BUTTON TO SHOOT
         </div>
 
         <div id="startScreen" class="menu" style="display: block;">
@@ -187,16 +225,53 @@
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    // EXPANDED PLANET LIST
+    // --- MOBILE DETECTION ---
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    if (isMobile) {
+        document.getElementById('mobileControls').style.display = 'block';
+        document.getElementById('desktopHint').style.display = 'none';
+        document.getElementById('mobileHint').style.display = 'block';
+        
+        // Touch Drag Logic for Ship Movement
+        canvas.addEventListener('touchmove', function(e) {
+            e.preventDefault(); // Stop scrolling
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            let touchX = touch.clientX - rect.left;
+            
+            // Keep ship within bounds
+            if (touchX < 20) touchX = 20;
+            if (touchX > canvas.width - 20) touchX = canvas.width - 20;
+            
+            player.x = touchX;
+        }, { passive: false });
+
+        // Fire Button Logic
+        const fireBtn = document.getElementById('mobileFireBtn');
+        fireBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            fireWeapon(); // Allow rapid tapping
+            // Optional: Hold to fire logic could go here, but tapping is often snappier
+        });
+        // Also allow hold-to-fire via loop if needed, but tap is safer for arcade feel
+        let isFiring = false;
+        fireBtn.addEventListener('touchstart', () => isFiring = true);
+        fireBtn.addEventListener('touchend', () => isFiring = false);
+        
+        // Inject into update loop for hold-to-fire support
+        setInterval(() => { if(isFiring) fireWeapon(); }, 100);
+    }
+
     const PLANET_COLORS = [
         { sky: '#000000', planet: '#444444' }, // Deep Space
         { sky: '#0d001a', planet: '#6a0dad' }, // Nebula
         { sky: '#1a0000', planet: '#8b0000' }, // Red Dwarf
-        { sky: '#001a00', planet: '#32cd32' }, // Toxic Nebula (New)
+        { sky: '#001a00', planet: '#32cd32' }, // Toxic Nebula
         { sky: '#001a1a', planet: '#00ced1' }, // Ice Field
-        { sky: '#1a0500', planet: '#ff4500' }, // Crimson Void (New)
+        { sky: '#1a0500', planet: '#ff4500' }, // Crimson Void
         { sky: '#1a1a00', planet: '#ffd700' }, // Solar Orbit
-        { sky: '#220022', planet: '#ff00ff' }, // Crystal World (New)
+        { sky: '#220022', planet: '#ff00ff' }, // Crystal World
         { sky: '#000033', planet: '#1e90ff' }  // Earth
     ];
 
@@ -216,11 +291,11 @@
     let levelCompleteTriggered = false;
 
     // Load/Save Logic
-    if(localStorage.getItem('spaceEscapeV15')) {
-        try { gameData = JSON.parse(localStorage.getItem('spaceEscapeV15')); document.getElementById('playerNameInput').value = gameData.name; } catch(e) { clearSave(); }
+    if(localStorage.getItem('spaceEscapeV16')) {
+        try { gameData = JSON.parse(localStorage.getItem('spaceEscapeV16')); document.getElementById('playerNameInput').value = gameData.name; } catch(e) { clearSave(); }
     }
-    function saveGame() { localStorage.setItem('spaceEscapeV15', JSON.stringify(gameData)); }
-    function clearSave() { localStorage.removeItem('spaceEscapeV15'); location.reload(); }
+    function saveGame() { localStorage.setItem('spaceEscapeV16', JSON.stringify(gameData)); }
+    function clearSave() { localStorage.removeItem('spaceEscapeV16'); location.reload(); }
 
     const player = { x: canvas.width / 2, y: canvas.height - 100, speed: 7, lastShot: 0 };
     let bullets = [], enemyBullets = [], enemies = [], particles = [], coins = [];
@@ -259,22 +334,17 @@
 
     function spawnEnemy() {
         let lvl = gameData.level;
-        let type = 'invader'; // Default
-        let hp = 1; let speed = 1.5 + (lvl * 0.3); let size = 45; let canShoot = false;
+        let type = 'invader'; let hp = 1; let speed = 1.5 + (lvl * 0.3); let size = 45; let canShoot = false;
         let rng = Math.random();
 
-        // Type selection based on level
-        if (rng < 0.05 + (lvl * 0.01)) { 
-            type = 'asteroid'; hp = 5; speed = 4; size = 50; 
-        } else {
+        if (rng < 0.05 + (lvl * 0.01)) { type = 'asteroid'; hp = 5; speed = 4; size = 50; } 
+        else {
             if (lvl >= 2 && rng > 0.6) { type = 'speeder'; hp = 2; speed += 2.0; size=40; }
             if (lvl >= 4 && rng > 0.85) { type = 'brute'; hp = 4; speed = 1.0; canShoot = true; size=60; }
             if (lvl >= 7 && rng > 0.95) { type = 'boss'; hp = 8; speed = 0.8; canShoot = true; size=80; }
         }
         
-        // Random horizontal rotation for asteroids
         let rotSpeed = (Math.random()-0.5) * 0.1;
-
         enemies.push({ x: Math.random()*(canvas.width-60)+30, y: -80, size, type, hp, speed, canShoot, lastShot: frameCount, rot: 0, rotSpeed });
     }
 
@@ -314,9 +384,13 @@
         if (gameState !== 'PLAYING') return;
         frameCount++;
 
-        if (keys.ArrowLeft && player.x > 30) player.x -= player.speed;
-        if (keys.ArrowRight && player.x < canvas.width - 30) player.x += player.speed;
-        if (keys[" "]) fireWeapon();
+        // Desktop Movement
+        if (!isMobile) {
+            if (keys.ArrowLeft && player.x > 30) player.x -= player.speed;
+            if (keys.ArrowRight && player.x < canvas.width - 30) player.x += player.speed;
+            if (keys[" "]) fireWeapon();
+        }
+        // Mobile Movement is handled by 'touchmove' listener instantly
 
         // Bullets
         for(let i=bullets.length-1; i>=0; i--) {
@@ -336,7 +410,7 @@
         for(let i=enemies.length-1; i>=0; i--) {
             let e = enemies[i]; 
             e.y += e.speed;
-            e.rot += e.rotSpeed; // Rotate asteroids
+            e.rot += e.rotSpeed; 
 
             if(e.canShoot && Math.random() < 0.02) enemyBullets.push({x: e.x, y: e.y + 20, speed: 6});
 
@@ -413,88 +487,28 @@
     }
 
     // --- DRAW HELPER FUNCTIONS ---
-    
-    // 1. Invader (Green)
     function drawInvader(x, y, w, h) {
         ctx.fillStyle = '#44ff44';
-        ctx.beginPath();
-        ctx.rect(x-15, y-15, 30, 20); // Body
-        ctx.rect(x-20, y, 5, 10); // L Arm
-        ctx.rect(x+15, y, 5, 10); // R Arm
-        ctx.rect(x-10, y+5, 5, 10); // L Leg
-        ctx.rect(x+5, y+5, 5, 10); // R Leg
-        ctx.fill();
-        ctx.fillStyle = 'black';
-        ctx.fillRect(x-8, y-10, 5, 5); // Eyes
-        ctx.fillRect(x+3, y-10, 5, 5);
+        ctx.beginPath(); ctx.rect(x-15, y-15, 30, 20); ctx.rect(x-20, y, 5, 10); ctx.rect(x+15, y, 5, 10); ctx.rect(x-10, y+5, 5, 10); ctx.rect(x+5, y+5, 5, 10); ctx.fill();
+        ctx.fillStyle = 'black'; ctx.fillRect(x-8, y-10, 5, 5); ctx.fillRect(x+3, y-10, 5, 5);
     }
-
-    // 2. Speeder (Cyan Saucer)
     function drawSpeeder(x, y, w, h) {
-        ctx.fillStyle = '#00ffff';
-        ctx.beginPath();
-        ctx.ellipse(x, y, 25, 10, 0, 0, Math.PI*2);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(x, y-5, 10, 0, Math.PI, true); // Dome
-        ctx.fill();
+        ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.ellipse(x, y, 25, 10, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y-5, 10, 0, Math.PI, true); ctx.fill();
     }
-
-    // 3. Brute (Red Tank)
     function drawBrute(x, y, w, h) {
-        ctx.fillStyle = '#ff4444';
-        ctx.beginPath();
-        ctx.moveTo(x, y+20);
-        ctx.lineTo(x-25, y-20);
-        ctx.lineTo(x, y-10);
-        ctx.lineTo(x+25, y-20);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#880000'; // Armor plates
-        ctx.fillRect(x-10, y-15, 20, 5);
+        ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.moveTo(x, y+20); ctx.lineTo(x-25, y-20); ctx.lineTo(x, y-10); ctx.lineTo(x+25, y-20); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#880000'; ctx.fillRect(x-10, y-15, 20, 5);
     }
-    
-    // 4. Boss (Purple)
     function drawBoss(x, y, w, h) {
-        ctx.fillStyle = '#aa00aa';
-        ctx.beginPath();
-        ctx.arc(x, y, 30, 0, Math.PI*2);
-        ctx.fill();
-        ctx.fillStyle = '#ff00ff'; // Spikes
-        ctx.beginPath();
-        ctx.moveTo(x-30, y); ctx.lineTo(x-45, y-10); ctx.lineTo(x-30, y-20);
-        ctx.moveTo(x+30, y); ctx.lineTo(x+45, y-10); ctx.lineTo(x+30, y-20);
-        ctx.fill();
-        // Evil Eye
-        ctx.fillStyle = '#ffff00';
-        ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#000';
-        ctx.beginPath(); ctx.rect(x-2, y-5, 4, 10); ctx.fill();
+        ctx.fillStyle = '#aa00aa'; ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ff00ff'; ctx.beginPath(); ctx.moveTo(x-30, y); ctx.lineTo(x-45, y-10); ctx.lineTo(x-30, y-20); ctx.moveTo(x+30, y); ctx.lineTo(x+45, y-10); ctx.lineTo(x+30, y-20); ctx.fill();
+        ctx.fillStyle = '#ffff00'; ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#000'; ctx.beginPath(); ctx.rect(x-2, y-5, 4, 10); ctx.fill();
     }
-
-    // 5. Asteroid (Jagged Rock)
     function drawAsteroid(x, y, size, rot) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(rot);
-        ctx.fillStyle = '#888';
-        ctx.beginPath();
-        // Draw irregular shape
-        ctx.moveTo(-size/2, -size/2);
-        ctx.lineTo(0, -size/1.5);
-        ctx.lineTo(size/2, -size/2);
-        ctx.lineTo(size/1.5, 0);
-        ctx.lineTo(size/2, size/2);
-        ctx.lineTo(0, size/1.2);
-        ctx.lineTo(-size/2, size/2);
-        ctx.lineTo(-size/1.5, 0);
-        ctx.closePath();
-        ctx.fill();
-        // Crater
-        ctx.fillStyle = '#666';
-        ctx.beginPath(); ctx.arc(-5, -5, size/5, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
+        ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+        ctx.fillStyle = '#888'; ctx.beginPath(); ctx.moveTo(-size/2, -size/2); ctx.lineTo(0, -size/1.5); ctx.lineTo(size/2, -size/2); ctx.lineTo(size/1.5, 0); ctx.lineTo(size/2, size/2); ctx.lineTo(0, size/1.2); ctx.lineTo(-size/2, size/2); ctx.lineTo(-size/1.5, 0); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#666'; ctx.beginPath(); ctx.arc(-5, -5, size/5, 0, Math.PI*2); ctx.fill(); ctx.restore();
     }
 
     // --- DRAW LOOP ---
@@ -514,36 +528,18 @@
                 ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x, player.y - 10, 40, 0, Math.PI*2); ctx.stroke();
             }
             
-            // DRAW SHIP
-            ctx.fillStyle = '#00d2ff';
-            ctx.shadowBlur = 10; ctx.shadowColor = '#00d2ff';
-            ctx.beginPath();
-            ctx.moveTo(player.x, player.y - 20); 
-            ctx.lineTo(player.x - 20, player.y + 15); 
-            ctx.lineTo(player.x, player.y + 5); 
-            ctx.lineTo(player.x + 20, player.y + 15); 
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.ellipse(player.x, player.y - 5, 5, 10, 0, 0, Math.PI*2); ctx.fill();
-            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#00d2ff'; ctx.shadowBlur = 10; ctx.shadowColor = '#00d2ff';
+            ctx.beginPath(); ctx.moveTo(player.x, player.y - 20); ctx.lineTo(player.x - 20, player.y + 15); ctx.lineTo(player.x, player.y + 5); ctx.lineTo(player.x + 20, player.y + 15); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(player.x, player.y - 5, 5, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
         }
 
         bullets.forEach(b => {
-            if(b.type === 'rocket') {
-                ctx.font = "20px Arial"; ctx.fillText("🚀", b.x, b.y);
-            } else {
-                ctx.fillStyle = b.color;
-                ctx.shadowBlur = 5; ctx.shadowColor = b.color;
-                ctx.fillRect(b.x-b.w/2, b.y, b.w, b.h);
-                ctx.shadowBlur = 0;
-            }
+            if(b.type === 'rocket') { ctx.font = "20px Arial"; ctx.fillText("🚀", b.x, b.y); } 
+            else { ctx.fillStyle = b.color; ctx.shadowBlur = 5; ctx.shadowColor = b.color; ctx.fillRect(b.x-b.w/2, b.y, b.w, b.h); ctx.shadowBlur = 0; }
         });
         
         ctx.fillStyle = '#f0f'; enemyBullets.forEach(eb => { ctx.beginPath(); ctx.arc(eb.x, eb.y, 6, 0, Math.PI*2); ctx.fill(); });
         
-        // DRAW ENEMIES (Using new helper functions)
         enemies.forEach(e => {
             if(e.type === 'invader') drawInvader(e.x, e.y, e.size, e.size);
             else if(e.type === 'speeder') drawSpeeder(e.x, e.y, e.size, e.size);
@@ -551,7 +547,6 @@
             else if(e.type === 'boss') drawBoss(e.x, e.y, e.size, e.size);
             else if(e.type === 'asteroid') drawAsteroid(e.x, e.y, e.size, e.rot);
             
-            // Health Bar
             if(e.hp > 1 && e.type !== 'asteroid') {
                 ctx.fillStyle = "red"; ctx.fillRect(e.x-15, e.y-30, 30, 5);
                 ctx.fillStyle = "#0f0"; ctx.fillRect(e.x-15, e.y-30, 30 * (e.hp/4), 5);
