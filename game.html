@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SPACE ESCAPE: Final Fixed</title>
+    <title>SPACE ESCAPE: Arsenal Update</title>
     <style>
-        /* GLOBAL RESET for accurate math */
         * { box-sizing: border-box; }
         
         body { margin: 0; background: #000; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
@@ -23,97 +22,49 @@
             color: #aaa; font-size: 14px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px;
         }
         
-        /* General Menu Styling */
         .menu { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: rgba(0, 20, 40, 0.98); border: 3px solid #00d2ff; padding: 25px; 
+            background: rgba(0, 20, 40, 0.98); border: 3px solid #00d2ff; padding: 20px; 
             text-align: center; pointer-events: auto; display: none; box-shadow: 0 0 50px rgba(0, 210, 255, 0.4); border-radius: 12px;
-            min-width: 420px; z-index: 10;
+            min-width: 500px; z-index: 10;
         }
         
         button { 
-            background: #00d2ff; border: none; padding: 10px 20px; color: #000; 
-            font-weight: bold; cursor: pointer; font-family: inherit; border-radius: 4px; font-size: 16px;
-            transition: 0.2s; margin-top: 10px;
+            background: #00d2ff; border: none; padding: 8px 15px; color: #000; 
+            font-weight: bold; cursor: pointer; font-family: inherit; border-radius: 4px; font-size: 14px;
+            transition: 0.2s; 
         }
         button:hover { background: #fff; transform: scale(1.05); }
         button:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; }
         
-        .btn-green { background: #00ff00; width: 100%; }
-        .btn-red { background: #ff4444; width: 100%; }
-        .shop-item { margin: 12px 0; border-bottom: 1px solid #444; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-
-        /* --- CASE OPENING STYLES --- */
-        #caseScreen { width: 520px; padding-bottom: 20px; }
+        .btn-green { background: #00ff00; width: 100%; font-size: 16px; padding: 12px;}
+        .btn-red { background: #ff4444; width: 100%; font-size: 16px; padding: 12px; }
         
+        .shop-section { margin-bottom: 15px; border: 1px solid #444; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.3); }
+        .shop-title { color: #aaa; font-size: 0.9em; border-bottom: 1px solid #444; margin-bottom: 5px; text-align: left; }
+        .shop-item { margin: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Case Opening Styles */
+        #caseScreen { width: 520px; padding-bottom: 20px; }
         .case-window {
-            width: 450px; /* Window Width */
-            height: 130px;
-            background: #111;
-            border: 4px solid #333;
-            margin: 20px auto;
-            position: relative;
-            overflow: hidden; 
-            border-radius: 8px;
-            box-shadow: inset 0 0 30px #000;
+            width: 450px; height: 130px; background: #111; border: 4px solid #333;
+            margin: 20px auto; position: relative; overflow: hidden; 
+            border-radius: 8px; box-shadow: inset 0 0 30px #000;
         }
-
-        .case-reel {
-            display: flex;
-            height: 100%;
-            position: absolute;
-            left: 0;
-            will-change: transform; /* Smoother animation */
-        }
-
+        .case-reel { display: flex; height: 100%; position: absolute; left: 0; will-change: transform; }
         .case-item {
-            /* MATH FIX: border-box ensures padding/border is INCLUDED in the 100px */
-            box-sizing: border-box; 
-            width: 100px; 
-            height: 100px;
-            margin: 15px 10px; /* 10px Left + 10px Right = 20px margin space */
-            background: #222;
-            border: 3px solid #555;
-            flex-shrink: 0; 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
-            border-radius: 8px;
-            position: relative;
+            box-sizing: border-box; width: 100px; height: 100px; margin: 15px 10px;
+            background: #222; border: 3px solid #555; flex-shrink: 0; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-size: 40px; border-radius: 8px; position: relative;
         }
-
-        /* Rarity Colors */
         .common { border-color: #aaa; box-shadow: 0 0 5px #aaa; } 
         .uncommon { border-color: #00d2ff; box-shadow: 0 0 10px #00d2ff; } 
         .rare { border-color: #d200ff; box-shadow: 0 0 15px #d200ff; } 
         .legendary { border-color: #ffd700; box-shadow: 0 0 25px #ffd700; animation: pulse 1s infinite; } 
-
         @keyframes pulse { 0% { border-color: #ffd700; } 50% { border-color: #ff5500; } 100% { border-color: #ffd700; } }
-
-        .center-line {
-            position: absolute;
-            top: 0; left: 50%;
-            width: 4px; height: 100%;
-            background: #ff0000;
-            transform: translateX(-50%);
-            z-index: 20;
-            box-shadow: 0 0 15px red;
-        }
-        
-        .item-label { font-size: 11px; margin-top: 5px; color: #fff; text-shadow: none; font-weight: normal;}
-
-        /* Spin Button */
-        #spinBtn {
-            background: linear-gradient(to bottom, #ffd700, #ffaa00);
-            border: 2px solid #fff;
-            color: black;
-            font-size: 1.2em;
-            width: 80%;
-            padding: 15px;
-            box-shadow: 0 0 15px #ffd700;
-        }
+        .center-line { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #ff0000; transform: translateX(-50%); z-index: 20; box-shadow: 0 0 15px red; }
+        #spinBtn { background: linear-gradient(to bottom, #ffd700, #ffaa00); border: 2px solid #fff; color: black; font-size: 1.2em; width: 80%; padding: 15px; box-shadow: 0 0 15px #ffd700; margin-top:10px;}
         #spinBtn:hover { transform: scale(1.1); box-shadow: 0 0 25px #ffd700; }
 
     </style>
@@ -140,7 +91,7 @@
         <div id="startScreen" class="menu" style="display: block;">
             <h1 style="color:#00d2ff">SPACE ESCAPE</h1>
             <div style="font-size: 50px; margin-bottom: 10px;">👨‍🚀 🚀 🪨 👽</div>
-            <p>10 Sectors. Asteroids kill instantly. Loot cases await.</p>
+            <p>10 Sectors. New Weapons. Hardcore Mode.</p>
             <input type="text" id="playerNameInput" placeholder="Enter Name" maxlength="12" style="padding:10px; text-align:center;">
             <br><br>
             <button onclick="startGame()" style="font-size: 1.2em; padding: 15px 30px;">LAUNCH MISSION</button>
@@ -151,138 +102,114 @@
         <div id="caseScreen" class="menu">
             <h2 style="color:#ffd700; margin:0;">SECTOR CLEARED!</h2>
             <p id="caseStatus" style="color:#aaa; font-size: 0.9em;">Supply Crate Ready</p>
-            
             <div class="case-window">
                 <div class="center-line"></div>
-                <div class="case-reel" id="caseReel">
-                    </div>
+                <div class="case-reel" id="caseReel"></div>
             </div>
-            
-            <div id="caseControls" style="margin-top: 20px;">
+            <div id="caseControls">
                 <button id="spinBtn" onclick="startSpin()">OPEN CASE</button>
-                <div id="prizeResult" style="display:none; height: 30px; font-weight: bold; color: #00ff00; font-size: 1.2em; margin-bottom: 10px;"></div>
+                <div id="prizeResult" style="display:none; height: 30px; font-weight: bold; color: #00ff00; font-size: 1.2em; margin: 10px 0;"></div>
                 <button id="claimBtn" onclick="finishCase()" style="display:none; width: 100%;">CLAIM REWARD</button>
             </div>
         </div>
 
         <div id="shopScreen" class="menu">
-            <h2 style="color:#00d2ff">DOCKING STATION</h2>
-            <p>Coins: <span id="shopCoins" style="color:yellow; font-size: 1.5em;">0</span></p>
+            <h2 style="color:#00d2ff; margin-top:0;">DOCKING STATION</h2>
+            <p style="margin:5px 0;">Coins: <span id="shopCoins" style="color:yellow; font-size: 1.5em;">0</span></p>
             
-            <div class="shop-item">
-                 <span style="text-align:left">🛡️ <strong>Shield</strong><br><span style="font-size:0.8em; color:#aaa">Max: 3</span></span> 
-                 <span style="text-align:right">Cost: 15<br><button id="btnShield" class="cost-btn" onclick="buy('shield')">Buy</button></span>
+            <div class="shop-section">
+                <div class="shop-title">SHIP UPGRADES</div>
+                <div class="shop-item">
+                     <span>🛡️ <strong>Shield</strong> (Max 3)</span> 
+                     <span>Cost: 15 <button id="btnShield" onclick="buy('shield')">Buy</button></span>
+                </div>
+                <div class="shop-item">
+                    <span>❤️ <strong>Extra Life</strong></span> 
+                    <span>Cost: 250 <button id="btnLife" onclick="buy('life')">Buy</button></span>
+                </div>
+                <div class="shop-item">
+                    <span>💥 <strong>Damage +1</strong></span> 
+                    <span>Cost: 120 <button id="btnPower" onclick="buy('power')">Buy</button></span>
+                </div>
             </div>
-            <div class="shop-item">
-                <span style="text-align:left">⚡ <strong>Speed</strong><br><span style="font-size:0.8em; color:#aaa">Fire Rate</span></span> 
-                <span style="text-align:right">Cost: 60<br><button id="btnSpeed" class="cost-btn" onclick="buy('speed')">Buy</button></span>
-            </div>
-            <div class="shop-item">
-                <span style="text-align:left">💥 <strong>Power</strong><br><span style="font-size:0.8em; color:#aaa">Damage</span></span> 
-                <span style="text-align:right">Cost: 120<br><button id="btnPower" class="cost-btn" onclick="buy('power')">Buy</button></span>
-            </div>
-            <div class="shop-item">
-                <span style="text-align:left">❤️ <strong>Life</strong><br><span style="font-size:0.8em; color:#aaa">Extra Try</span></span> 
-                <span style="text-align:right">Cost: 250<br><button id="btnLife" class="cost-btn" onclick="buy('life')">Buy</button></span>
+
+            <div class="shop-section">
+                <div class="shop-title">WEAPONS BAY (Replaces Current)</div>
+                <div class="shop-item">
+                    <span style="text-align:left">⚡ <strong>Rapid Fire</strong><br><span style="font-size:0.7em; color:#aaa">Fast, small beams</span></span> 
+                    <span>Cost: 200 <button id="btnWpnRapid" onclick="buyWeapon('rapid')">Buy</button></span>
+                </div>
+                <div class="shop-item">
+                    <span style="text-align:left">📐 <strong>Triple Split</strong><br><span style="font-size:0.7em; color:#aaa">3-Way Spread Shot</span></span> 
+                    <span>Cost: 400 <button id="btnWpnSpread" onclick="buyWeapon('spread')">Buy</button></span>
+                </div>
+                <div class="shop-item">
+                    <span style="text-align:left">🚀 <strong>Rocket Launcher</strong><br><span style="font-size:0.7em; color:#aaa">Explodes on impact</span></span> 
+                    <span>Cost: 600 <button id="btnWpnRocket" onclick="buyWeapon('rocket')">Buy</button></span>
+                </div>
             </div>
             
-            <button onclick="nextLevel()" style="width: 100%; margin-top: 20px;">NEXT SECTOR >></button>
+            <button onclick="nextLevel()" style="width: 100%;">NEXT SECTOR >></button>
         </div>
 
         <div id="gameOverScreen" class="menu">
             <h1 style="color:red">MISSION FAILED</h1>
             <div style="font-size: 60px;">☠️</div>
-            <button class="btn-green" onclick="restartKeepUpgrades()">RETRY (KEEP GUNS)</button>
-            <button class="btn-red" onclick="clearSave()">WIPE SAVE</button>
+            <p style="color:#ccc;">Your ship was destroyed.<br>All progress lost.</p>
+            <button class="btn-red" onclick="clearSave()">RESTART MISSION</button>
         </div>
         
         <div id="winScreen" class="menu">
             <h1 style="color:#00ff00">WELCOME HOME!</h1>
             <div style="font-size: 60px;">🌍</div>
             <p>Final Score: <span id="finalScore"></span></p>
-            <button onclick="restartKeepUpgrades()">PLAY AGAIN</button>
+            <button onclick="clearSave()">PLAY AGAIN</button>
         </div>
     </div>
 
 <script>
-    // --- SETUP ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resize);
-    resize();
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
 
     const PLANET_COLORS = [
-        { sky: '#000000', planet: '#444444', name: "Deep Space" }, 
-        { sky: '#0d001a', planet: '#6a0dad', name: "Nebula Sector" },
-        { sky: '#1a0000', planet: '#8b0000', name: "Red Dwarf" }, 
-        { sky: '#001a1a', planet: '#00ced1', name: "Ice Field" }, 
-        { sky: '#1a1a00', planet: '#ffd700', name: "Solar Orbit" }, 
-        { sky: '#000033', planet: '#1e90ff', name: "Earth Orbit" }  
+        { sky: '#000000', planet: '#444444' }, { sky: '#0d001a', planet: '#6a0dad' },
+        { sky: '#1a0000', planet: '#8b0000' }, { sky: '#001a1a', planet: '#00ced1' }, 
+        { sky: '#1a1a00', planet: '#ffd700' }, { sky: '#000033', planet: '#1e90ff' }  
     ];
 
     // --- GAME DATA ---
     let gameData = {
-        name: "Pilot",
-        score: 0,
-        level: 1,
-        coins: 0,
-        lives: 3,
-        stats: {
-            bulletSpeed: 9,
-            bulletPower: 1, 
-            fireRate: 60, // Start Slow
-            maxShields: 3
-        }
+        name: "Pilot", score: 0, level: 1, coins: 0, lives: 3,
+        currentWeapon: 'standard', // standard, rapid, spread, rocket
+        stats: { bulletSpeed: 9, bulletPower: 1, maxShields: 3 }
     };
+    // Note: Fire rate is now determined by weapon type
 
     let currentShields = 3;
     let gameState = 'START'; 
     let frameCount = 0;
-    
     let enemiesToSpawn = 0;
     let spawnTimer = null;
     let levelCompleteTriggered = false;
 
-    // Load Save
-    if(localStorage.getItem('spaceEscapeSaveV9')) {
-        try {
-            gameData = JSON.parse(localStorage.getItem('spaceEscapeSaveV9'));
-            document.getElementById('playerNameInput').value = gameData.name;
-        } catch(e) { clearSave(); }
+    // Load/Save Logic
+    if(localStorage.getItem('spaceEscapeV11')) {
+        try { gameData = JSON.parse(localStorage.getItem('spaceEscapeV11')); document.getElementById('playerNameInput').value = gameData.name; } catch(e) { clearSave(); }
     }
+    function saveGame() { localStorage.setItem('spaceEscapeV11', JSON.stringify(gameData)); }
+    function clearSave() { localStorage.removeItem('spaceEscapeV11'); location.reload(); }
 
-    function saveGame() {
-        localStorage.setItem('spaceEscapeSaveV9', JSON.stringify(gameData));
-    }
-
-    function clearSave() {
-        localStorage.removeItem('spaceEscapeSaveV9');
-        location.reload();
-    }
-
-    function restartKeepUpgrades() {
-        gameData.level = 1;
-        gameData.lives = 3; 
-        saveGame();
-        document.getElementById('gameOverScreen').style.display = 'none';
-        document.getElementById('winScreen').style.display = 'none';
-        startLevel(1);
-    }
-
-    // --- OBJECTS ---
     const player = { x: canvas.width / 2, y: canvas.height - 100, speed: 7, lastShot: 0 };
     let bullets = [], enemyBullets = [], enemies = [], particles = [], coins = [];
-
     const keys = { ArrowLeft: false, ArrowRight: false, " ": false };
+
     window.addEventListener('keydown', e => keys[e.key] = true);
     window.addEventListener('keyup', e => keys[e.key] = false);
 
-    // --- GAME LOOP LOGIC ---
+    // --- GAMEPLAY ---
     function startGame() {
         const nameInput = document.getElementById('playerNameInput').value;
         if(nameInput.trim()) gameData.name = nameInput;
@@ -321,226 +248,102 @@
             if (lvl >= 5 && rng > 0.85) { char = "👹"; hp = 4; speed = 1.2; canShoot = true; size=60;}
             if (lvl >= 8 && rng > 0.95) { char = "💀"; hp = 8; speed = 1; canShoot = true; size=80; }
         }
-
         enemies.push({ x: Math.random()*(canvas.width-60)+30, y: -80, size, char, type, hp, speed, canShoot, lastShot: frameCount });
     }
 
-    // --- CASE OPENING LOGIC (PIXEL PERFECT FIX) ---
-    const LOOT_TABLE = [
-        { type: 'coin', val: 50, label: '50 Coins', icon: '🪙', rarity: 'common', weight: 40 },
-        { type: 'coin', val: 100, label: '100 Coins', icon: '💰', rarity: 'common', weight: 20 },
-        { type: 'shield', val: 1, label: 'Shield Refill', icon: '🛡️', rarity: 'uncommon', weight: 20 },
-        { type: 'speed', val: 1, label: 'Speed Up', icon: '⚡', rarity: 'rare', weight: 10 },
-        { type: 'power', val: 1, label: 'Damage Up', icon: '💥', rarity: 'rare', weight: 8 },
-        { type: 'life', val: 1, label: 'Extra Life', icon: '❤️', rarity: 'legendary', weight: 2 }
-    ];
+    // --- SHOOTING LOGIC ---
+    function fireWeapon() {
+        let w = gameData.currentWeapon;
+        let rate = 40; // Default slow
+        
+        if (w === 'standard') rate = 30;
+        if (w === 'rapid') rate = 8; // Very fast
+        if (w === 'spread') rate = 45; // Slower than standard
+        if (w === 'rocket') rate = 80; // Very slow
 
-    let pendingReward = null;
+        if (frameCount - player.lastShot > rate) {
+            
+            if (w === 'standard') {
+                bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: 0, vy: -gameData.stats.bulletSpeed, type: 'laser', dmg: gameData.stats.bulletPower, color: '#ff0' });
+            }
+            else if (w === 'rapid') {
+                // Rapid fire: Less damage per shot, but faster
+                bullets.push({ x: player.x, y: player.y-30, w: 2, h: 8, vx: 0, vy: -12, type: 'laser', dmg: Math.max(1, gameData.stats.bulletPower/2), color: '#0ff' });
+            }
+            else if (w === 'spread') {
+                // Triangle pattern
+                let p = gameData.stats.bulletPower;
+                bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: 0, vy: -9, type: 'laser', dmg: p, color: '#0f0' });
+                bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: -2, vy: -9, type: 'laser', dmg: p, color: '#0f0' });
+                bullets.push({ x: player.x, y: player.y-30, w: 4, h: 15, vx: 2, vy: -9, type: 'laser', dmg: p, color: '#0f0' });
+            }
+            else if (w === 'rocket') {
+                bullets.push({ x: player.x, y: player.y-30, w: 10, h: 20, vx: 0, vy: -5, type: 'rocket', dmg: 5 + gameData.stats.bulletPower, color: '#f00' });
+            }
 
-    // 1. Show Screen with "Open Case" button
-    function showCaseScreen() {
-        gameState = 'CASE';
-        saveGame();
-        
-        // Reset UI
-        document.getElementById('caseScreen').style.display = 'block';
-        document.getElementById('spinBtn').style.display = 'inline-block';
-        document.getElementById('claimBtn').style.display = 'none';
-        document.getElementById('prizeResult').style.display = 'none';
-        document.getElementById('caseStatus').innerText = "Supply Crate Ready";
-        
-        // Render Static Reel (All ? or random)
-        const reel = document.getElementById('caseReel');
-        reel.innerHTML = '';
-        reel.style.transform = 'translateX(0px)';
-        reel.style.transition = 'none';
-        
-        // Show some dummy items at start
-        for(let i=0; i<5; i++) {
-             const div = document.createElement('div');
-             div.className = 'case-item common';
-             div.innerHTML = `<div>❓</div>`;
-             reel.appendChild(div);
+            player.lastShot = frameCount;
         }
     }
 
-    // 2. Start Spin Logic when button clicked
-    function startSpin() {
-        document.getElementById('spinBtn').style.display = 'none'; // Hide button
-        document.getElementById('caseStatus').innerText = "Opening...";
-
-        const reel = document.getElementById('caseReel');
-        reel.innerHTML = '';
-        
-        let items = [];
-        // Generate 60 items
-        for(let i=0; i<60; i++) items.push(getRandomLoot());
-        
-        // Pick Winner at fixed index 40
-        const winnerIndex = 40;
-        pendingReward = items[winnerIndex];
-
-        // Render DOM
-        items.forEach(item => {
-            const div = document.createElement('div');
-            div.className = `case-item ${item.rarity}`;
-            div.innerHTML = `<div>${item.icon}</div><div class="item-label">${item.label}</div>`;
-            reel.appendChild(div);
-        });
-
-        // 3. PIXEL PERFECT MATH
-        // Item Width = 100px (including border due to box-sizing: border-box)
-        // Margin = 10px Left + 10px Right = 20px.
-        // TOTAL ITEM SPACE = 120px.
-        // Window Width = 450px. Center = 225px.
-        
-        const itemWidth = 120; 
-        const windowCenter = 225;
-        
-        // Distance to center of winning item
-        // Index 40. Start position = 40 * 120 = 4800px.
-        // Center of item = 4800 + (120/2) = 4860px.
-        
-        // Target Translate = WindowCenter - WinnerCenter
-        let targetX = windowCenter - 4860; // Should be around -4635
-        
-        // Add minimal jitter (+/- 25px) to keep it inside the 100px box
-        const jitter = (Math.random() * 50) - 25; 
-        targetX += jitter;
-
-        // Force browser render
-        setTimeout(() => {
-            reel.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.3, 1)'; 
-            reel.style.transform = `translateX(${targetX}px)`;
-        }, 50);
-
-        // 4. Show Result
-        setTimeout(() => {
-            const res = document.getElementById('prizeResult');
-            res.style.display = 'block';
-            res.innerText = `WON: ${pendingReward.label}!`;
-            document.getElementById('claimBtn').style.display = 'inline-block';
-            applyReward(pendingReward);
-        }, 5500); 
-    }
-
-    function getRandomLoot() {
-        const totalWeight = LOOT_TABLE.reduce((sum, item) => sum + item.weight, 0);
-        let random = Math.random() * totalWeight;
-        for(let item of LOOT_TABLE) {
-            if(random < item.weight) return item;
-            random -= item.weight;
-        }
-        return LOOT_TABLE[0];
-    }
-
-    function applyReward(item) {
-        if(item.type === 'coin') gameData.coins += item.val;
-        if(item.type === 'shield') currentShields = Math.min(currentShields + 1, gameData.stats.maxShields);
-        if(item.type === 'speed') gameData.stats.fireRate = Math.max(5, gameData.stats.fireRate - 5);
-        if(item.type === 'power') gameData.stats.bulletPower++;
-        if(item.type === 'life') gameData.lives++;
-        saveGame();
-        updateHUD();
-    }
-
-    function finishCase() {
-        document.getElementById('caseScreen').style.display = 'none';
-        openShop();
-    }
-
-    // --- STANDARD UI FUNCTIONS ---
-    function openShop() {
-        gameState = 'SHOP';
-        document.getElementById('shopScreen').style.display = 'block';
-        updateShopUI();
-    }
-    
-    function updateShopUI() {
-        document.getElementById('shopCoins').innerText = gameData.coins;
-        const shieldBtn = document.getElementById('btnShield');
-        if(currentShields >= gameData.stats.maxShields) { shieldBtn.disabled = true; shieldBtn.innerText = "MAX"; } 
-        else { shieldBtn.disabled = false; shieldBtn.innerText = "Buy"; }
-    }
-
-    function nextLevel() {
-        document.getElementById('shopScreen').style.display = 'none';
-        gameData.level++;
-        if(gameData.level > 10) {
-            document.getElementById('finalScore').innerText = gameData.coins;
-            document.getElementById('winScreen').style.display = 'block';
-            gameState = 'WIN';
-            saveGame();
-        } else {
-            startLevel(gameData.level);
-        }
-    }
-
-    function buy(item) {
-        let cost = 0; let success = false;
-        if(item === 'shield') cost = 15;
-        if(item === 'speed') cost = 60;
-        if(item === 'power') cost = 120;
-        if(item === 'life') cost = 250;
-
-        if(gameData.coins < cost) return; 
-
-        if(item === 'shield' && currentShields < gameData.stats.maxShields) {
-            gameData.coins -= cost; currentShields++; success = true;
-        } else if(item === 'speed') {
-            gameData.coins -= cost; gameData.stats.fireRate = Math.max(5, gameData.stats.fireRate - 5); success = true;
-        } else if(item === 'power') {
-            gameData.coins -= cost; gameData.stats.bulletPower++; success = true;
-        } else if(item === 'life') {
-            gameData.coins -= cost; gameData.lives++; success = true;
-        }
-        if(success) { updateShopUI(); updateHUD(); saveGame(); }
-    }
-
-    // --- GAME UPDATE & DRAW ---
+    // --- UPDATE LOOP ---
     function update() {
         if (gameState !== 'PLAYING') return;
         frameCount++;
 
         if (keys.ArrowLeft && player.x > 30) player.x -= player.speed;
         if (keys.ArrowRight && player.x < canvas.width - 30) player.x += player.speed;
-        
-        if (keys[" "] && frameCount - player.lastShot > gameData.stats.fireRate) {
-            bullets.push({ x: player.x, y: player.y - 30, w: 4, h: 15, speed: gameData.stats.bulletSpeed });
-            player.lastShot = frameCount;
-        }
+        if (keys[" "]) fireWeapon();
 
+        // Bullets
         for(let i=bullets.length-1; i>=0; i--) {
-            let b = bullets[i]; b.y -= b.speed;
+            let b = bullets[i]; 
+            b.x += b.vx; b.y += b.vy;
             if (b.y < -20) bullets.splice(i, 1);
         }
         
+        // Enemy Bullets
         for(let i=enemyBullets.length-1; i>=0; i--) {
             let eb = enemyBullets[i]; eb.y += eb.speed;
             if(dist(eb.x, eb.y, player.x, player.y) < 30) { enemyBullets.splice(i, 1); takeDamage(); } 
             else if (eb.y > canvas.height) enemyBullets.splice(i, 1);
         }
 
+        // Enemies
         for(let i=enemies.length-1; i>=0; i--) {
             let e = enemies[i]; e.y += e.speed;
             if(e.canShoot && Math.random() < 0.02) enemyBullets.push({x: e.x, y: e.y + 20, speed: 6});
 
             for(let j=bullets.length-1; j>=0; j--) {
                 let b = bullets[j];
+                // Collision
                 if (dist(b.x, b.y, e.x, e.y - 10) < e.size/1.5) {
-                    bullets.splice(j, 1);
-                    e.hp -= gameData.stats.bulletPower;
-                    createExplosion(e.x, e.y, '#fff', 3);
-                    if (e.hp <= 0) {
-                        createExplosion(e.x, e.y, '#0f0', 10);
-                        if(e.type !== 'asteroid') coins.push({x: e.x, y: e.y, val: 5 + gameData.level});
-                        enemies.splice(i, 1);
-                        break;
+                    
+                    if (b.type === 'rocket') {
+                        // Rocket Explosion
+                        bullets.splice(j, 1);
+                        createExplosion(b.x, b.y, '#ffaa00', 30);
+                        // Blast Radius Damage
+                        for(let k=enemies.length-1; k>=0; k--) {
+                            let nearby = enemies[k];
+                            if(dist(b.x, b.y, nearby.x, nearby.y) < 150) {
+                                nearby.hp -= b.dmg;
+                                if(nearby.hp <= 0) killEnemy(k);
+                            }
+                        }
+                        // Stop checking bullets for this rocket
+                        break; 
+                    } else {
+                        // Laser
+                        bullets.splice(j, 1);
+                        e.hp -= b.dmg;
+                        createExplosion(e.x, e.y, b.color, 3);
+                        if (e.hp <= 0) { killEnemy(i); break; }
                     }
                 }
             }
         }
         
+        // Enemy-Player Collision
         for(let i=enemies.length-1; i>=0; i--) {
              let e = enemies[i];
              if(dist(e.x, e.y, player.x, player.y) < e.size) {
@@ -551,16 +354,16 @@
 
         if (enemies.length === 0 && enemiesToSpawn <= 0 && !levelCompleteTriggered) {
              levelCompleteTriggered = true;
-             // Trigger Case Screen (Static state)
              setTimeout(showCaseScreen, 1500);
         }
 
+        // Coins
         for(let i=coins.length-1; i>=0; i--) {
             let c = coins[i]; c.y += 3; 
             if(dist(c.x, c.y, player.x, player.y) < 40) { gameData.coins += c.val; coins.splice(i, 1); } 
             else if(c.y > canvas.height) coins.splice(i, 1);
         }
-
+        // Particles
         for(let i=particles.length-1; i>=0; i--) {
             let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--;
             if(p.life <= 0) particles.splice(i, 1);
@@ -568,15 +371,18 @@
         updateHUD();
     }
     
-    function takeDamage() {
-        createExplosion(player.x, player.y, '#00ccff', 20);
-        currentShields--;
-        if (currentShields < 0) loseLife();
+    function killEnemy(idx) {
+        if(idx >= enemies.length || idx < 0) return;
+        let e = enemies[idx];
+        createExplosion(e.x, e.y, '#0f0', 10);
+        if(e.type !== 'asteroid') coins.push({x: e.x, y: e.y, val: 5 + gameData.level});
+        enemies.splice(idx, 1);
     }
+
+    function takeDamage() { createExplosion(player.x, player.y, '#00ccff', 20); currentShields--; if (currentShields < 0) loseLife(); }
     function takeLifeInstant() { createExplosion(player.x, player.y, '#ff0000', 50); loseLife(); }
     function loseLife() {
-        gameData.lives--;
-        currentShields = gameData.stats.maxShields;
+        gameData.lives--; currentShields = gameData.stats.maxShields;
         if (gameData.lives <= 0) { gameState = 'GAMEOVER'; document.getElementById('gameOverScreen').style.display = 'block'; }
     }
     function dist(x1, y1, x2, y2) { return Math.sqrt((x1-x2)**2 + (y1-y2)**2); }
@@ -584,6 +390,7 @@
         for(let i=0; i<count; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 15+Math.random()*15, color: color, size: Math.random()*5+1 });
     }
 
+    // --- DRAW LOOP ---
     function draw() {
         const zoneIdx = Math.min(Math.floor((gameData.level-1)/2), PLANET_COLORS.length - 1);
         const config = PLANET_COLORS[zoneIdx];
@@ -591,7 +398,6 @@
         let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
         grad.addColorStop(0, '#000'); grad.addColorStop(1, config.sky);
         ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
         ctx.fillStyle = config.planet; ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height + 400, 600, 0, Math.PI*2); ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 20; ctx.stroke();
 
@@ -603,21 +409,18 @@
             ctx.font = "50px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("👨‍🚀", player.x, player.y);
         }
 
-        // DYNAMIC LASER COLORS
-        let power = gameData.stats.bulletPower;
-        let laserColor = '#ffff00'; // Default Yellow
-        if(power >= 2) laserColor = '#00ff00'; // Green
-        if(power >= 3) laserColor = '#00ffff'; // Cyan
-        if(power >= 5) laserColor = '#ff00ff'; // Purple
+        bullets.forEach(b => {
+            if(b.type === 'rocket') {
+                ctx.font = "20px Arial"; ctx.fillText("🚀", b.x, b.y);
+            } else {
+                ctx.fillStyle = b.color;
+                ctx.shadowBlur = 5; ctx.shadowColor = b.color;
+                ctx.fillRect(b.x-b.w/2, b.y, b.w, b.h);
+                ctx.shadowBlur = 0;
+            }
+        });
         
-        ctx.fillStyle = laserColor;
-        ctx.shadowBlur = 10; ctx.shadowColor = laserColor;
-        bullets.forEach(b => ctx.fillRect(b.x-2, b.y, b.w, b.h));
-        ctx.shadowBlur = 0;
-        
-        ctx.fillStyle = '#f0f';
-        enemyBullets.forEach(eb => { ctx.beginPath(); ctx.arc(eb.x, eb.y, 6, 0, Math.PI*2); ctx.fill(); });
-
+        ctx.fillStyle = '#f0f'; enemyBullets.forEach(eb => { ctx.beginPath(); ctx.arc(eb.x, eb.y, 6, 0, Math.PI*2); ctx.fill(); });
         enemies.forEach(e => {
             ctx.font = e.size + "px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(e.char, e.x, e.y);
             if(e.hp > 1 && e.type !== 'asteroid') {
@@ -625,11 +428,103 @@
                 ctx.fillStyle = "#0f0"; ctx.fillRect(e.x-15, e.y-30, 30 * (e.hp/4), 5);
             }
         });
-
         coins.forEach(c => { ctx.font = "20px Arial"; ctx.fillText("🪙", c.x, c.y); });
         particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
     }
 
+    // --- CASE & SHOP LOGIC ---
+    const LOOT_TABLE = [
+        { type: 'coin', val: 50, label: '50 Coins', icon: '🪙', rarity: 'common', weight: 40 },
+        { type: 'coin', val: 100, label: '100 Coins', icon: '💰', rarity: 'common', weight: 20 },
+        { type: 'shield', val: 1, label: 'Shield Refill', icon: '🛡️', rarity: 'uncommon', weight: 20 },
+        { type: 'power', val: 1, label: 'Damage +1', icon: '💥', rarity: 'rare', weight: 10 },
+        { type: 'life', val: 1, label: 'Extra Life', icon: '❤️', rarity: 'legendary', weight: 2 }
+    ];
+    let pendingReward = null;
+
+    function showCaseScreen() {
+        gameState = 'CASE'; saveGame();
+        document.getElementById('caseScreen').style.display = 'block';
+        document.getElementById('spinBtn').style.display = 'inline-block';
+        document.getElementById('claimBtn').style.display = 'none';
+        document.getElementById('prizeResult').style.display = 'none';
+        document.getElementById('caseStatus').innerText = "Supply Crate Ready";
+        const reel = document.getElementById('caseReel');
+        reel.innerHTML = ''; reel.style.transform = 'translateX(0px)'; reel.style.transition = 'none';
+        for(let i=0; i<5; i++) { const div = document.createElement('div'); div.className = 'case-item common'; div.innerHTML = `<div>❓</div>`; reel.appendChild(div); }
+    }
+
+    function startSpin() {
+        document.getElementById('spinBtn').style.display = 'none'; 
+        document.getElementById('caseStatus').innerText = "Opening...";
+        const reel = document.getElementById('caseReel'); reel.innerHTML = '';
+        let items = []; for(let i=0; i<60; i++) items.push(getRandomLoot());
+        const winnerIndex = 40; pendingReward = items[winnerIndex];
+        items.forEach(item => { const div = document.createElement('div'); div.className = `case-item ${item.rarity}`; div.innerHTML = `<div>${item.icon}</div><div class="item-label">${item.label}</div>`; reel.appendChild(div); });
+        const itemWidth = 120; const windowCenter = 225;
+        let targetX = windowCenter - ((winnerIndex * itemWidth) + (itemWidth/2));
+        targetX += (Math.random() * 50) - 25; 
+        setTimeout(() => { reel.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.3, 1)'; reel.style.transform = `translateX(${targetX}px)`; }, 50);
+        setTimeout(() => { document.getElementById('prizeResult').style.display = 'block'; document.getElementById('prizeResult').innerText = `WON: ${pendingReward.label}!`; document.getElementById('claimBtn').style.display = 'inline-block'; applyReward(pendingReward); }, 5500); 
+    }
+    function getRandomLoot() {
+        const totalWeight = LOOT_TABLE.reduce((sum, item) => sum + item.weight, 0);
+        let random = Math.random() * totalWeight;
+        for(let item of LOOT_TABLE) { if(random < item.weight) return item; random -= item.weight; }
+        return LOOT_TABLE[0];
+    }
+    function applyReward(item) {
+        if(item.type === 'coin') gameData.coins += item.val;
+        if(item.type === 'shield') currentShields = Math.min(currentShields + 1, gameData.stats.maxShields);
+        if(item.type === 'power') gameData.stats.bulletPower++;
+        if(item.type === 'life') gameData.lives++;
+        saveGame(); updateHUD();
+    }
+    function finishCase() { document.getElementById('caseScreen').style.display = 'none'; openShop(); }
+    function openShop() { gameState = 'SHOP'; document.getElementById('shopScreen').style.display = 'block'; updateShopUI(); }
+    
+    function updateShopUI() {
+        document.getElementById('shopCoins').innerText = gameData.coins;
+        document.getElementById('btnShield').innerText = currentShields >= 3 ? "MAX" : "Buy";
+        document.getElementById('btnShield').disabled = currentShields >= 3;
+        
+        // Highlight current weapon
+        const w = gameData.currentWeapon;
+        document.getElementById('btnWpnRapid').innerText = w === 'rapid' ? "OWNED" : "Buy";
+        document.getElementById('btnWpnSpread').innerText = w === 'spread' ? "OWNED" : "Buy";
+        document.getElementById('btnWpnRocket').innerText = w === 'rocket' ? "OWNED" : "Buy";
+        
+        document.getElementById('btnWpnRapid').disabled = w === 'rapid';
+        document.getElementById('btnWpnSpread').disabled = w === 'spread';
+        document.getElementById('btnWpnRocket').disabled = w === 'rocket';
+    }
+
+    function buy(item) {
+        if(item === 'shield' && gameData.coins >= 15 && currentShields < 3) { gameData.coins-=15; currentShields++; }
+        else if(item === 'life' && gameData.coins >= 250) { gameData.coins-=250; gameData.lives++; }
+        else if(item === 'power' && gameData.coins >= 120) { gameData.coins-=120; gameData.stats.bulletPower++; }
+        updateShopUI(); updateHUD(); saveGame();
+    }
+
+    function buyWeapon(type) {
+        let cost = 0;
+        if(type === 'rapid') cost = 200;
+        if(type === 'spread') cost = 400;
+        if(type === 'rocket') cost = 600;
+
+        if(gameData.coins >= cost) {
+            gameData.coins -= cost;
+            gameData.currentWeapon = type;
+            updateShopUI(); updateHUD(); saveGame();
+        }
+    }
+
+    function nextLevel() {
+        document.getElementById('shopScreen').style.display = 'none';
+        gameData.level++;
+        if(gameData.level > 10) { document.getElementById('finalScore').innerText = gameData.coins; document.getElementById('winScreen').style.display = 'block'; gameState = 'WIN'; saveGame(); } 
+        else { startLevel(gameData.level); }
+    }
     function updateHUD() {
         document.getElementById('hudName').innerText = gameData.name;
         document.getElementById('hudLives').innerText = "❤️".repeat(gameData.lives);
@@ -638,7 +533,6 @@
         document.getElementById('hudCoins').innerText = gameData.coins;
         document.getElementById('hudLevel').innerText = gameData.level;
     }
-
     function loop() { update(); draw(); requestAnimationFrame(loop); }
     loop();
 </script>
