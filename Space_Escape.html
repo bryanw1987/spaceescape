@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Galactic Return: Case Opener</title>
+    <style>
+        body { margin: 0; background: #000; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        canvas { display: block; } 
+        
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
+        .hud { 
+            position: absolute; top: 10px; left: 10px; 
+            font-size: 20px; font-weight: bold; text-shadow: 2px 2px #000; 
+            background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px;
+        }
+
+        .controls-hint {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+            color: #aaa; font-size: 14px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px;
+        }
+        
+        /* General Menu Styling */
+        .menu { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: rgba(0, 20, 40, 0.98); border: 3px solid #00d2ff; padding: 25px; 
+            text-align: center; pointer-events: auto; display: none; box-shadow: 0 0 50px rgba(0, 210, 255, 0.4); border-radius: 12px;
+            min-width: 380px; z-index: 10;
+        }
+        
+        button { 
+            background: #00d2ff; border: none; padding: 10px 20px; color: #000; 
+            font-weight: bold; cursor: pointer; font-family: inherit; border-radius: 4px; font-size: 16px;
+            transition: 0.2s; margin-top: 10px;
+        }
+        button:hover { background: #fff; transform: scale(1.05); }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; }
+        
+        .btn-green { background: #00ff00; width: 100%; }
+        .btn-red { background: #ff4444; width: 100%; }
+        .shop-item { margin: 12px 0; border-bottom: 1px solid #444; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* --- CASE OPENING STYLES --- */
+        #caseScreen {
+            width: 500px;
+            height: 300px;
+            overflow: hidden;
+        }
+        
+        .case-window {
+            width: 450px;
+            height: 120px;
+            background: #111;
+            border: 4px solid #333;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden; /* Hides the items that are outside */
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px #000;
+        }
+
+        .case-reel {
+            display: flex;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            /* Transition is handled in JS for precise timing */
+        }
+
+        .case-item {
+            width: 100px;
+            height: 100px;
+            margin: 10px;
+            background: #222;
+            border: 2px solid #555;
+            flex-shrink: 0; /* Don't shrink */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        /* Rarity Colors for Borders */
+        .common { border-color: #aaa; box-shadow: 0 0 5px #aaa; } /* Coins */
+        .uncommon { border-color: #00d2ff; box-shadow: 0 0 10px #00d2ff; } /* Shield */
+        .rare { border-color: #d200ff; box-shadow: 0 0 15px #d200ff; } /* Upgrades */
+        .legendary { border-color: #ffd700; box-shadow: 0 0 25px #ffd700; animation: pulse 1s infinite; } /* Life */
+
+        @keyframes pulse { 0% { border-color: #ffd700; } 50% { border-color: #ff5500; } 100% { border-color: #ffd700; } }
+
+        .center-line {
+            position: absolute;
+            top: 0; left: 50%;
+            width: 4px; height: 100%;
+            background: #ff0000;
+            transform: translateX(-50%);
+            z-index: 5;
+            box-shadow: 0 0 10px red;
+        }
+        
+        .item-label { font-size: 12px; margin-top: 5px; color: #fff; text-shadow: none; font-weight: normal;}
+
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="hud">
+            PILOT: <span id="hudName">Player</span> <br>
+            ----------------<br>
+            LIVES: <span id="hudLives">❤️❤️❤️</span> <br>
+            SHIELDS: <span id="hudShield">🛡️🛡️🛡️</span> <br>
+            ----------------<br>
+            COINS: <span id="hudCoins" style="color:yellow">0</span> <br>
+            SECTOR: <span id="hudLevel">1</span>
+        </div>
+
+        <div class="controls-hint">
+            ⬅️➡️ MOVE | [SPACE] SHOOT
+        </div>
+
+        <div id="startScreen" class="menu" style="display: block;">
+            <h1 style="color:#00d2ff">GALACTIC RETURN</h1>
+            <div style="font-size: 50px; margin-bottom: 10px;">👨‍🚀 🚀 🪨 👽</div>
+            <p>10 Sectors. Asteroids kill instantly. Loot cases await.</p>
+            <input type="text" id="playerNameInput" placeholder="Enter Name" maxlength="12" style="padding:10px; text-align:center;">
+            <br><br>
+            <button onclick="startGame()" style="font-size: 1.2em; padding: 15px 30px;">LAUNCH MISSION</button>
+            <br><br>
+            <button onclick="clearSave()" style="background: #444; color:#ccc; font-size: 0.8em;">RESET SAVE DATA</button>
+        </div>
+
+        <div id="caseScreen" class="menu">
+            <h2 style="color:#ffd700; margin:0;">SECTOR CLEARED!</h2>
+            <p>Scanning wreckage for salvage...</p>
+            
+            <div class="case-window">
+                <div class="center-line"></div>
+                <div class="case-reel" id="caseReel">
+                    </div>
+            </div>
+            
+            <div id="prizeResult" style="height: 30px; font-weight: bold; color: #00ff00; font-size: 1.2em;"></div>
+            
+            <button id="claimBtn" onclick="finishCase()" style="display:none; width: 100%;">CLAIM REWARD</button>
+        </div>
+
+        <div id="shopScreen" class="menu">
+            <h2 style="color:#00d2ff">DOCKING STATION</h2>
+            <p>Coins: <span id="shopCoins" style="color:yellow; font-size: 1.5em;">0</span></p>
+            
+            <div class="shop-item">
+                 <span style="text-align:left">🛡️ <strong>Shield</strong><br><span style="font-size:0.8em; color:#aaa">Max: 3</span></span> 
+                 <span style="text-align:right">Cost: 15<br><button id="btnShield" class="cost-btn" onclick="buy('shield')">Buy</button></span>
+            </div>
+            <div class="shop-item">
+                <span style="text-align:left">⚡ <strong>Speed</strong><br><span style="font-size:0.8em; color:#aaa">Fire Rate</span></span> 
+                <span style="text-align:right">Cost: 60<br><button id="btnSpeed" class="cost-btn" onclick="buy('speed')">Buy</button></span>
+            </div>
+            <div class="shop-item">
+                <span style="text-align:left">💥 <strong>Power</strong><br><span style="font-size:0.8em; color:#aaa">Damage</span></span> 
+                <span style="text-align:right">Cost: 120<br><button id="btnPower" class="cost-btn" onclick="buy('power')">Buy</button></span>
+            </div>
+            <div class="shop-item">
+                <span style="text-align:left">❤️ <strong>Life</strong><br><span style="font-size:0.8em; color:#aaa">Extra Try</span></span> 
+                <span style="text-align:right">Cost: 250<br><button id="btnLife" class="cost-btn" onclick="buy('life')">Buy</button></span>
+            </div>
+            
+            <button onclick="nextLevel()" style="width: 100%; margin-top: 20px;">NEXT SECTOR >></button>
+        </div>
+
+        <div id="gameOverScreen" class="menu">
+            <h1 style="color:red">MISSION FAILED</h1>
+            <div style="font-size: 60px;">☠️</div>
+            <button class="btn-green" onclick="restartKeepUpgrades()">RETRY (KEEP GUNS)</button>
+            <button class="btn-red" onclick="clearSave()">WIPE SAVE</button>
+        </div>
+        
+        <div id="winScreen" class="menu">
+            <h1 style="color:#00ff00">WELCOME HOME!</h1>
+            <div style="font-size: 60px;">🌍</div>
+            <p>Final Score: <span id="finalScore"></span></p>
+            <button onclick="restartKeepUpgrades()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+<script>
+    // --- SETUP ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const PLANET_COLORS = [
+        { sky: '#000000', planet: '#444444', name: "Deep Space" }, 
+        { sky: '#0d001a', planet: '#6a0dad', name: "Nebula Sector" },
+        { sky: '#1a0000', planet: '#8b0000', name: "Red Dwarf" }, 
+        { sky: '#001a1a', planet: '#00ced1', name: "Ice Field" }, 
+        { sky: '#1a1a00', planet: '#ffd700', name: "Solar Orbit" }, 
+        { sky: '#000033', planet: '#1e90ff', name: "Earth Orbit" }  
+    ];
+
+    // --- GAME DATA ---
+    let gameData = {
+        name: "Pilot",
+        score: 0,
+        level: 1,
+        coins: 0,
+        lives: 3,
+        stats: {
+            bulletSpeed: 9,
+            bulletPower: 1, 
+            fireRate: 60, // Start Slow
+            maxShields: 3
+        }
+    };
+
+    let currentShields = 3;
+    let gameState = 'START'; 
+    let frameCount = 0;
+    
+    let enemiesToSpawn = 0;
+    let spawnTimer = null;
+    let levelCompleteTriggered = false;
+
+    // Load Save
+    if(localStorage.getItem('galacticCaseSave')) {
+        try {
+            gameData = JSON.parse(localStorage.getItem('galacticCaseSave'));
+            document.getElementById('playerNameInput').value = gameData.name;
+        } catch(e) { clearSave(); }
+    }
+
+    function saveGame() {
+        localStorage.setItem('galacticCaseSave', JSON.stringify(gameData));
+    }
+
+    function clearSave() {
+        localStorage.removeItem('galacticCaseSave');
+        location.reload();
+    }
+
+    function restartKeepUpgrades() {
+        gameData.level = 1;
+        gameData.lives = 3; 
+        saveGame();
+        document.getElementById('gameOverScreen').style.display = 'none';
+        document.getElementById('winScreen').style.display = 'none';
+        startLevel(1);
+    }
+
+    // --- OBJECTS ---
+    const player = { x: canvas.width / 2, y: canvas.height - 100, speed: 7, lastShot: 0 };
+    let bullets = [], enemyBullets = [], enemies = [], particles = [], coins = [];
+
+    const keys = { ArrowLeft: false, ArrowRight: false, " ": false };
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    // --- GAME LOOP LOGIC ---
+    function startGame() {
+        const nameInput = document.getElementById('playerNameInput').value;
+        if(nameInput.trim()) gameData.name = nameInput;
+        document.getElementById('startScreen').style.display = 'none';
+        currentShields = gameData.stats.maxShields;
+        startLevel(gameData.level);
+    }
+
+    function startLevel(lvl) {
+        gameState = 'PLAYING';
+        levelCompleteTriggered = false;
+        bullets = []; enemyBullets = []; enemies = []; coins = []; particles = [];
+        player.x = canvas.width/2;
+        enemiesToSpawn = 15 + (lvl * 5); 
+        spawnLoop();
+    }
+
+    function spawnLoop() {
+        if(gameState !== 'PLAYING') return;
+        if(enemiesToSpawn > 0) {
+            spawnEnemy();
+            enemiesToSpawn--;
+            let rate = Math.max(300, 1000 - (gameData.level * 80)); 
+            spawnTimer = setTimeout(spawnLoop, rate);
+        }
+    }
+
+    function spawnEnemy() {
+        let lvl = gameData.level;
+        let char = "👾"; let hp = 1; let speed = 1.5 + (lvl * 0.3); let type = 'alien'; let size = 45; let canShoot = false;
+        let rng = Math.random();
+
+        if (rng < 0.05 + (lvl * 0.01)) { type = 'asteroid'; char = '🪨'; hp = 5; speed = 4; size = 50; } 
+        else {
+            if (lvl >= 3 && rng > 0.6) { char = "🛸"; hp = 2; speed += 1.5; size=50;}
+            if (lvl >= 5 && rng > 0.85) { char = "👹"; hp = 4; speed = 1.2; canShoot = true; size=60;}
+            if (lvl >= 8 && rng > 0.95) { char = "💀"; hp = 8; speed = 1; canShoot = true; size=80; }
+        }
+
+        enemies.push({ x: Math.random()*(canvas.width-60)+30, y: -80, size, char, type, hp, speed, canShoot, lastShot: frameCount });
+    }
+
+    // --- CASE OPENING LOGIC ---
+    const LOOT_TABLE = [
+        { type: 'coin', val: 50, label: '50 Coins', icon: '🪙', rarity: 'common', weight: 40 },
+        { type: 'coin', val: 100, label: '100 Coins', icon: '💰', rarity: 'common', weight: 20 },
+        { type: 'shield', val: 1, label: 'Shield Refill', icon: '🛡️', rarity: 'uncommon', weight: 20 },
+        { type: 'speed', val: 1, label: 'Speed Up', icon: '⚡', rarity: 'rare', weight: 10 },
+        { type: 'power', val: 1, label: 'Damage Up', icon: '💥', rarity: 'rare', weight: 8 },
+        { type: 'life', val: 1, label: 'Extra Life', icon: '❤️', rarity: 'legendary', weight: 2 }
+    ];
+
+    let pendingReward = null;
+
+    function triggerCaseOpening() {
+        gameState = 'CASE';
+        saveGame();
+        document.getElementById('caseScreen').style.display = 'block';
+        document.getElementById('claimBtn').style.display = 'none';
+        document.getElementById('prizeResult').innerText = "Spinning...";
+
+        // 1. Generate Reel
+        const reel = document.getElementById('caseReel');
+        reel.innerHTML = '';
+        reel.style.transition = 'none';
+        reel.style.transform = 'translateX(0px)';
+
+        let items = [];
+        // Add 50 dummy items, then the winner, then 5 more
+        for(let i=0; i<60; i++) {
+            items.push(getRandomLoot());
+        }
+        
+        // Pick a Winner (Rigged to be at index 45)
+        const winnerIndex = 45;
+        pendingReward = items[winnerIndex];
+
+        // Render DOM
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = `case-item ${item.rarity}`;
+            div.innerHTML = `<div>${item.icon}</div><div class="item-label">${item.label}</div>`;
+            reel.appendChild(div);
+        });
+
+        // 2. Start Animation (CSS Translate)
+        // Item width (100) + Margin (20) = 120px per item
+        // Center of window is at 225px.
+        // We want item 45 to be centered.
+        // Formula: -(ItemIndex * 120) + (WindowCenter - ItemHalfWidth)
+        // -(45 * 120) + (225 - 60) = -5400 + 165 = -5235
+        
+        // Random jitter to make it look like it barely landed or almost passed
+        const jitter = Math.floor(Math.random() * 80) - 40; 
+        const targetPos = -((winnerIndex * 120) - 165 + jitter);
+
+        setTimeout(() => {
+            reel.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.3, 1)'; // The "Slow Down" effect
+            reel.style.transform = `translateX(${targetPos}px)`;
+        }, 100);
+
+        // 3. End Event
+        setTimeout(() => {
+            document.getElementById('prizeResult').innerText = `WON: ${pendingReward.label}!`;
+            document.getElementById('claimBtn').style.display = 'inline-block';
+            applyReward(pendingReward);
+        }, 5500); // Wait for animation
+    }
+
+    function getRandomLoot() {
+        const totalWeight = LOOT_TABLE.reduce((sum, item) => sum + item.weight, 0);
+        let random = Math.random() * totalWeight;
+        for(let item of LOOT_TABLE) {
+            if(random < item.weight) return item;
+            random -= item.weight;
+        }
+        return LOOT_TABLE[0];
+    }
+
+    function applyReward(item) {
+        if(item.type === 'coin') gameData.coins += item.val;
+        if(item.type === 'shield') currentShields = Math.min(currentShields + 1, gameData.stats.maxShields);
+        if(item.type === 'speed') gameData.stats.fireRate = Math.max(5, gameData.stats.fireRate - 5);
+        if(item.type === 'power') gameData.stats.bulletPower++;
+        if(item.type === 'life') gameData.lives++;
+        saveGame();
+        updateHUD();
+    }
+
+    function finishCase() {
+        document.getElementById('caseScreen').style.display = 'none';
+        openShop();
+    }
+
+    // --- STANDARD UI FUNCTIONS ---
+    function openShop() {
+        gameState = 'SHOP';
+        document.getElementById('shopScreen').style.display = 'block';
+        updateShopUI();
+    }
+    
+    function updateShopUI() {
+        document.getElementById('shopCoins').innerText = gameData.coins;
+        const shieldBtn = document.getElementById('btnShield');
+        if(currentShields >= gameData.stats.maxShields) { shieldBtn.disabled = true; shieldBtn.innerText = "MAX"; } 
+        else { shieldBtn.disabled = false; shieldBtn.innerText = "Buy"; }
+    }
+
+    function nextLevel() {
+        document.getElementById('shopScreen').style.display = 'none';
+        gameData.level++;
+        if(gameData.level > 10) {
+            document.getElementById('finalScore').innerText = gameData.coins;
+            document.getElementById('winScreen').style.display = 'block';
+            gameState = 'WIN';
+            saveGame();
+        } else {
+            startLevel(gameData.level);
+        }
+    }
+
+    function buy(item) {
+        let cost = 0; let success = false;
+        if(item === 'shield') cost = 15;
+        if(item === 'speed') cost = 60;
+        if(item === 'power') cost = 120;
+        if(item === 'life') cost = 250;
+
+        if(gameData.coins < cost) return; 
+
+        if(item === 'shield' && currentShields < gameData.stats.maxShields) {
+            gameData.coins -= cost; currentShields++; success = true;
+        } else if(item === 'speed') {
+            gameData.coins -= cost; gameData.stats.fireRate = Math.max(5, gameData.stats.fireRate - 5); success = true;
+        } else if(item === 'power') {
+            gameData.coins -= cost; gameData.stats.bulletPower++; success = true;
+        } else if(item === 'life') {
+            gameData.coins -= cost; gameData.lives++; success = true;
+        }
+        if(success) { updateShopUI(); updateHUD(); saveGame(); }
+    }
+
+    // --- GAME UPDATE & DRAW ---
+    function update() {
+        if (gameState !== 'PLAYING') return;
+        frameCount++;
+
+        if (keys.ArrowLeft && player.x > 30) player.x -= player.speed;
+        if (keys.ArrowRight && player.x < canvas.width - 30) player.x += player.speed;
+        
+        if (keys[" "] && frameCount - player.lastShot > gameData.stats.fireRate) {
+            bullets.push({ x: player.x, y: player.y - 30, w: 4, h: 15, speed: gameData.stats.bulletSpeed });
+            player.lastShot = frameCount;
+        }
+
+        for(let i=bullets.length-1; i>=0; i--) {
+            let b = bullets[i]; b.y -= b.speed;
+            if (b.y < -20) bullets.splice(i, 1);
+        }
+        
+        for(let i=enemyBullets.length-1; i>=0; i--) {
+            let eb = enemyBullets[i]; eb.y += eb.speed;
+            if(dist(eb.x, eb.y, player.x, player.y) < 30) { enemyBullets.splice(i, 1); takeDamage(); } 
+            else if (eb.y > canvas.height) enemyBullets.splice(i, 1);
+        }
+
+        for(let i=enemies.length-1; i>=0; i--) {
+            let e = enemies[i]; e.y += e.speed;
+            if(e.canShoot && Math.random() < 0.02) enemyBullets.push({x: e.x, y: e.y + 20, speed: 6});
+
+            for(let j=bullets.length-1; j>=0; j--) {
+                let b = bullets[j];
+                if (dist(b.x, b.y, e.x, e.y - 10) < e.size/1.5) {
+                    bullets.splice(j, 1);
+                    e.hp -= gameData.stats.bulletPower;
+                    createExplosion(e.x, e.y, '#fff', 3);
+                    if (e.hp <= 0) {
+                        createExplosion(e.x, e.y, '#0f0', 10);
+                        if(e.type !== 'asteroid') coins.push({x: e.x, y: e.y, val: 5 + gameData.level});
+                        enemies.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        for(let i=enemies.length-1; i>=0; i--) {
+             let e = enemies[i];
+             if(dist(e.x, e.y, player.x, player.y) < e.size) {
+                 enemies.splice(i, 1);
+                 if(e.type === 'asteroid') takeLifeInstant(); else takeDamage(); 
+             } else if (e.y > canvas.height + 50) enemies.splice(i, 1);
+        }
+
+        if (enemies.length === 0 && enemiesToSpawn <= 0 && !levelCompleteTriggered) {
+             levelCompleteTriggered = true;
+             // TRIGGER CASE OPENING INSTEAD OF SHOP
+             setTimeout(triggerCaseOpening, 1500);
+        }
+
+        for(let i=coins.length-1; i>=0; i--) {
+            let c = coins[i]; c.y += 3; 
+            if(dist(c.x, c.y, player.x, player.y) < 40) { gameData.coins += c.val; coins.splice(i, 1); } 
+            else if(c.y > canvas.height) coins.splice(i, 1);
+        }
+
+        for(let i=particles.length-1; i>=0; i--) {
+            let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--;
+            if(p.life <= 0) particles.splice(i, 1);
+        }
+        updateHUD();
+    }
+    
+    function takeDamage() {
+        createExplosion(player.x, player.y, '#00ccff', 20);
+        currentShields--;
+        if (currentShields < 0) loseLife();
+    }
+    function takeLifeInstant() { createExplosion(player.x, player.y, '#ff0000', 50); loseLife(); }
+    function loseLife() {
+        gameData.lives--;
+        currentShields = gameData.stats.maxShields;
+        if (gameData.lives <= 0) { gameState = 'GAMEOVER'; document.getElementById('gameOverScreen').style.display = 'block'; }
+    }
+    function dist(x1, y1, x2, y2) { return Math.sqrt((x1-x2)**2 + (y1-y2)**2); }
+    function createExplosion(x, y, color, count) {
+        for(let i=0; i<count; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 15+Math.random()*15, color: color, size: Math.random()*5+1 });
+    }
+
+    function draw() {
+        const zoneIdx = Math.min(Math.floor((gameData.level-1)/2), PLANET_COLORS.length - 1);
+        const config = PLANET_COLORS[zoneIdx];
+        
+        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#000'); grad.addColorStop(1, config.sky);
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = config.planet; ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height + 400, 600, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 20; ctx.stroke();
+
+        if(gameState === 'PLAYING') {
+            if(currentShields > 0) {
+                ctx.strokeStyle = `rgba(0, 200, 255, ${currentShields * 0.3})`;
+                ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x, player.y - 10, 40, 0, Math.PI*2); ctx.stroke();
+            }
+            ctx.font = "50px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("👨‍🚀", player.x, player.y);
+        }
+
+        // DYNAMIC LASER COLORS
+        let power = gameData.stats.bulletPower;
+        let laserColor = '#ffff00'; // Default Yellow
+        if(power >= 2) laserColor = '#00ff00'; // Green
+        if(power >= 3) laserColor = '#00ffff'; // Cyan
+        if(power >= 5) laserColor = '#ff00ff'; // Purple
+        
+        ctx.fillStyle = laserColor;
+        ctx.shadowBlur = 10; ctx.shadowColor = laserColor;
+        bullets.forEach(b => ctx.fillRect(b.x-2, b.y, b.w, b.h));
+        ctx.shadowBlur = 0;
+        
+        ctx.fillStyle = '#f0f';
+        enemyBullets.forEach(eb => { ctx.beginPath(); ctx.arc(eb.x, eb.y, 6, 0, Math.PI*2); ctx.fill(); });
+
+        enemies.forEach(e => {
+            ctx.font = e.size + "px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(e.char, e.x, e.y);
+            if(e.hp > 1 && e.type !== 'asteroid') {
+                ctx.fillStyle = "red"; ctx.fillRect(e.x-15, e.y-30, 30, 5);
+                ctx.fillStyle = "#0f0"; ctx.fillRect(e.x-15, e.y-30, 30 * (e.hp/4), 5);
+            }
+        });
+
+        coins.forEach(c => { ctx.font = "20px Arial"; ctx.fillText("🪙", c.x, c.y); });
+        particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
+    }
+
+    function updateHUD() {
+        document.getElementById('hudName').innerText = gameData.name;
+        document.getElementById('hudLives').innerText = "❤️".repeat(gameData.lives);
+        let s = currentShields >= 0 ? currentShields : 0;
+        document.getElementById('hudShield').innerText = "🛡️".repeat(s);
+        document.getElementById('hudCoins').innerText = gameData.coins;
+        document.getElementById('hudLevel').innerText = gameData.level;
+    }
+
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
+    loop();
+</script>
+</body>
+</html>
