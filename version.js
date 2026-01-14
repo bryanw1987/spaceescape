@@ -1,8 +1,9 @@
 {
-  "version": 2.8,
+  "version": 2.9,
   "downloadUrl": "https://github.com/bryanw1987/spaceescape/releases/latest"
 
 }
+
 
 
 
